@@ -21,6 +21,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+        
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
@@ -53,11 +60,32 @@ jobs:
         echo "✅ Private key file created"
         
     - name: Install Node.js dependencies
+      timeout-minutes: 10
       run: |
+        echo "📦 Installing Node.js dependencies..."
+        echo "📁 Current directory: $(pwd)"
+        echo "📁 Backend directory contents:"
+        ls -la backend/
+        echo ""
+        echo "📄 Package.json contents:"
+        cat backend/package.json
+        echo ""
+        echo "🔄 Starting npm install with timeout..."
+        
         cd backend
-        npm install
+        
+        # Clear npm cache first
+        npm cache clean --force
+        
+        # Install with verbose logging and timeout
+        timeout 600 npm install --verbose --no-audit --no-fund
+        
+        echo "✅ Node.js dependencies installed successfully"
+        echo "📦 Installed packages:"
+        npm list --depth=0
         
     - name: Build and deploy to TestFlight
+      timeout-minutes: 20
       env:
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}

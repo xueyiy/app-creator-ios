@@ -4,7 +4,7 @@
   "description": "TestFlight deployment service for iOS builds",
   "main": "testflight-service.js",
   "scripts": {
-    "install": "npm install"
+    "start": "node testflight-service.js"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.0",
