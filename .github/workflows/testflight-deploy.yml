@@ -150,28 +150,27 @@ jobs:
             // Create exportOptions.plist for App Store distribution
             const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8"?>';
             const doctype = '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">';
-            const exportOptionsContent = \`\${xmlDeclaration}
-            \${doctype}
-            <plist version="1.0">
-            <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>\${process.env.APPLE_TEAM_ID}</string>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>compileBitcode</key>
-              <false/>
-              <key>manageAppVersionAndBuildNumber</key>
-              <true/>
-              <key>destination</key>
-              <string>export</string>
-              <key>signingStyle</key>
-              <string>automatic</string>
-            </dict>
-            </plist>\`;
+            const exportOptionsContent = xmlDeclaration + '\n' + doctype + '\n' +
+            '<plist version="1.0">\n' +
+            '<dict>\n' +
+            '  <key>method</key>\n' +
+            '  <string>app-store</string>\n' +
+            '  <key>teamID</key>\n' +
+            '  <string>' + process.env.APPLE_TEAM_ID + '</string>\n' +
+            '  <key>uploadBitcode</key>\n' +
+            '  <false/>\n' +
+            '  <key>uploadSymbols</key>\n' +
+            '  <true/>\n' +
+            '  <key>compileBitcode</key>\n' +
+            '  <false/>\n' +
+            '  <key>manageAppVersionAndBuildNumber</key>\n' +
+            '  <true/>\n' +
+            '  <key>destination</key>\n' +
+            '  <string>export</string>\n' +
+            '  <key>signingStyle</key>\n' +
+            '  <string>automatic</string>\n' +
+            '</dict>\n' +
+            '</plist>';
             
             const exportOptionsPath = path.join(flutterProjectPath, 'exportOptions.plist');
             fs.writeFileSync(exportOptionsPath, exportOptionsContent);
