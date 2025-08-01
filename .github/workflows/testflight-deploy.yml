@@ -68,6 +68,8 @@ jobs:
         echo "🚀 Starting TestFlight deployment..."
         echo "📱 App Name: ${{ github.event.inputs.app_name }}"
         echo "🔧 Environment: Production with real builds"
+        echo "📁 Repository structure (minimal iOS build repo):"
+        ls -la
         
         cd backend
         
@@ -103,6 +105,7 @@ jobs:
             
           } catch (error) {
             console.error('❌ Deployment failed:', error.message);
+            console.error('📋 Error stack:', error.stack);
             process.exit(1);
           }
         }
