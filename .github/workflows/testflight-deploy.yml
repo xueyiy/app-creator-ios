@@ -24,7 +24,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.16.0'
+        flutter-version: '3.32.1'
         channel: 'stable'
         
     - name: Setup Xcode
@@ -36,6 +36,8 @@ jobs:
       run: |
         flutter doctor -v
         flutter --version
+        echo "✅ Dart SDK version check:"
+        dart --version
         
     - name: Install Flutter dependencies
       run: |
