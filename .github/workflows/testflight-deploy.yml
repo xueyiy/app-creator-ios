@@ -59,6 +59,33 @@ jobs:
         chmod 600 ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
         echo "✅ Private key file created"
         
+    - name: Setup iOS signing
+      run: |
+        # Create keychain for code signing
+        security create-keychain -p "" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+        security set-keychain-settings -t 3600 -u build.keychain
+        
+        # Import certificates if provided
+        if [[ -n "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE }}" ]]; then
+          echo "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          echo "✅ Distribution certificate imported"
+        else
+          echo "⚠️ No distribution certificate provided, using automatic signing"
+        fi
+        
+        # Import provisioning profile if provided
+        if [[ -n "${{ secrets.IOS_PROVISIONING_PROFILE }}" ]]; then
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/build.mobileprovision
+          echo "✅ Provisioning profile imported"
+        else
+          echo "⚠️ No provisioning profile provided, using automatic signing"
+        fi
+        
     - name: Install Node.js dependencies
       timeout-minutes: 10
       run: |
@@ -130,7 +157,7 @@ jobs:
             
             // Build Flutter app directly (not through packageFlutterApp)
             await new Promise((resolve, reject) => {
-              const flutterBuild = spawn('flutter', ['build', 'ios', '--release'], {
+              const flutterBuild = spawn('flutter', ['build', 'ios', '--release', '--no-codesign'], {
                 cwd: flutterProjectPath,
                 stdio: 'inherit'
               });
@@ -169,6 +196,8 @@ jobs:
             '  <string>export</string>\n' +
             '  <key>signingStyle</key>\n' +
             '  <string>automatic</string>\n' +
+            '  <key>signingCertificate</key>\n' +
+            '  <string>Apple Distribution</string>\n' +
             '</dict>\n' +
             '</plist>';
             
@@ -187,11 +216,13 @@ jobs:
                 '-scheme', 'Runner',
                 '-archivePath', archivePath,
                 '-configuration', 'Release',
-                '-destination', 'generic/platform=iOS'
+                '-destination', 'generic/platform=iOS',
+                '-allowProvisioningUpdates'
               ];
               
               const xcodebuild = spawn('xcodebuild', archiveCmd, {
-                stdio: 'inherit'
+                stdio: 'inherit',
+                env: { ...process.env, DEVELOPMENT_TEAM: process.env.APPLE_TEAM_ID }
               });
               
               xcodebuild.on('close', (code) => {
@@ -210,7 +241,8 @@ jobs:
                 '-exportArchive',
                 '-archivePath', archivePath,
                 '-exportPath', path.dirname(ipaPath),
-                '-exportOptionsPlist', exportOptionsPath
+                '-exportOptionsPlist', exportOptionsPath,
+                '-allowProvisioningUpdates'
               ];
               
               const xcodebuild = spawn('xcodebuild', exportCmd, {
