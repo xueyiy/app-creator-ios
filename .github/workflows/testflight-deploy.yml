@@ -103,9 +103,12 @@ jobs:
         
         cd backend
         
-        # Create deployment script
+        # Create deployment script that uses direct Flutter build
         cat > deploy.js << 'EOF'
         const TestFlightService = require('./testflight-service');
+        const { spawn } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
         
         async function deploy() {
           try {
@@ -113,12 +116,123 @@ jobs:
             const projectData = JSON.parse(process.env.PROJECT_DATA);
             const appName = process.env.APP_NAME;
             
-            console.log('📦 Packaging Flutter app...');
-            const result = await service.packageFlutterApp(projectData);
-            console.log('✅ App packaged successfully');
+            console.log('📦 Updating Flutter app with project data...');
+            
+            // Update the Flutter app with the project data
+            const flutterProjectPath = path.join(__dirname, '..', 'flutter_app');
+            const buildNumber = Math.floor(Date.now() / 1000);
+            const version = '1.0.0';
+            
+            await service.updateFlutterApp(flutterProjectPath, projectData, buildNumber, version);
+            console.log('✅ Flutter app updated successfully');
+            
+            console.log('🔨 Building Flutter iOS app...');
+            
+            // Build Flutter app directly (not through packageFlutterApp)
+            await new Promise((resolve, reject) => {
+              const flutterBuild = spawn('flutter', ['build', 'ios', '--release'], {
+                cwd: flutterProjectPath,
+                stdio: 'inherit'
+              });
+              
+              flutterBuild.on('close', (code) => {
+                if (code === 0) {
+                  console.log('✅ Flutter build completed');
+                  resolve();
+                } else {
+                  reject(new Error(`Flutter build failed with code ${code}`));
+                }
+              });
+            });
+            
+            console.log('📦 Creating IPA...');
+            
+            // Create exportOptions.plist for App Store distribution
+            const exportOptionsContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store</string>
+  <key>teamID</key>
+  <string>${process.env.APPLE_TEAM_ID}</string>
+  <key>uploadBitcode</key>
+  <false/>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>compileBitcode</key>
+  <false/>
+  <key>manageAppVersionAndBuildNumber</key>
+  <true/>
+  <key>destination</key>
+  <string>export</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+</dict>
+</plist>`;
+            
+            const exportOptionsPath = path.join(flutterProjectPath, 'exportOptions.plist');
+            fs.writeFileSync(exportOptionsPath, exportOptionsContent);
+            
+            // Archive and export IPA
+            const archivePath = path.join(flutterProjectPath, 'build', 'Runner.xcarchive');
+            const ipaPath = path.join(flutterProjectPath, 'build', 'Runner.ipa');
+            
+            console.log('🏗️ Archiving with xcodebuild...');
+            await new Promise((resolve, reject) => {
+              const archiveCmd = [
+                'archive',
+                '-workspace', path.join(flutterProjectPath, 'ios', 'Runner.xcworkspace'),
+                '-scheme', 'Runner',
+                '-archivePath', archivePath,
+                '-configuration', 'Release',
+                '-destination', 'generic/platform=iOS'
+              ];
+              
+              const xcodebuild = spawn('xcodebuild', archiveCmd, {
+                stdio: 'inherit'
+              });
+              
+              xcodebuild.on('close', (code) => {
+                if (code === 0) {
+                  console.log('✅ Archive completed');
+                  resolve();
+                } else {
+                  reject(new Error(`Archive failed with code ${code}`));
+                }
+              });
+            });
+            
+            console.log('📦 Exporting IPA...');
+            await new Promise((resolve, reject) => {
+              const exportCmd = [
+                '-exportArchive',
+                '-archivePath', archivePath,
+                '-exportPath', path.dirname(ipaPath),
+                '-exportOptionsPlist', exportOptionsPath
+              ];
+              
+              const xcodebuild = spawn('xcodebuild', exportCmd, {
+                stdio: 'inherit'
+              });
+              
+              xcodebuild.on('close', (code) => {
+                if (code === 0) {
+                  console.log('✅ IPA export completed');
+                  resolve();
+                } else {
+                  reject(new Error(`IPA export failed with code ${code}`));
+                }
+              });
+            });
             
             console.log('📤 Uploading to TestFlight...');
-            const upload = await service.uploadBuild(result.ipaPath, result.appConfig);
+            const appConfig = {
+              bundleId: process.env.BUNDLE_ID,
+              teamId: process.env.APPLE_TEAM_ID
+            };
+            
+            const upload = await service.uploadBuild(ipaPath, appConfig);
             console.log('✅ Upload completed:', upload.id);
             
             console.log('🔗 Generating public link...');
