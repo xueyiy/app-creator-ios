@@ -1,0 +1,27 @@
+{
+  "name": "app-creator-backend",
+  "version": "1.0.0",
+  "description": "Backend API for App Creator with OpenAI integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.28.0",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0",
+    "archiver": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "keywords": ["api", "openai", "express"],
+  "author": "",
+  "license": "ISC"
+} 

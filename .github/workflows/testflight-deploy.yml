@@ -1,0 +1,127 @@
+name: Deploy to TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_data:
+        description: 'Project data JSON (from your app)'
+        required: true
+        type: string
+      app_name:
+        description: 'App name for the build'
+        required: true
+        type: string
+        default: 'NoCodeApp'
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Verify Flutter setup
+      run: |
+        flutter doctor -v
+        flutter --version
+        
+    - name: Install Flutter dependencies
+      run: |
+        cd flutter_app
+        flutter pub get
+        flutter clean
+        
+    - name: Create private key file
+      run: |
+        mkdir -p ~/private_keys
+        echo "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}" > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        chmod 600 ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+        echo "✅ Private key file created"
+        
+    - name: Install Node.js dependencies
+      run: |
+        cd backend
+        npm install
+        
+    - name: Build and deploy to TestFlight
+      env:
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        NODE_ENV: production
+        FORCE_REAL_BUILDS: true
+      run: |
+        echo "🚀 Starting TestFlight deployment..."
+        echo "📱 App Name: ${{ github.event.inputs.app_name }}"
+        echo "🔧 Environment: Production with real builds"
+        
+        cd backend
+        
+        # Create deployment script
+        cat > deploy.js << 'EOF'
+        const TestFlightService = require('./testflight-service');
+        
+        async function deploy() {
+          try {
+            const service = new TestFlightService();
+            const projectData = JSON.parse(process.env.PROJECT_DATA);
+            const appName = process.env.APP_NAME;
+            
+            console.log('📦 Packaging Flutter app...');
+            const result = await service.packageFlutterApp(projectData);
+            console.log('✅ App packaged successfully');
+            
+            console.log('📤 Uploading to TestFlight...');
+            const upload = await service.uploadBuild(result.ipaPath, result.appConfig);
+            console.log('✅ Upload completed:', upload.id);
+            
+            console.log('🔗 Generating public link...');
+            const link = await service.generatePublicLink(upload.id);
+            console.log('✅ Public link generated');
+            
+            console.log('🎉 Deployment successful!');
+            console.log('📱 Build ID:', upload.id);
+            console.log('🔗 TestFlight Link:', link.publicLink);
+            
+            // Set output for GitHub Actions
+            console.log('::set-output name=build_id::' + upload.id);
+            console.log('::set-output name=testflight_link::' + link.publicLink);
+            
+          } catch (error) {
+            console.error('❌ Deployment failed:', error.message);
+            process.exit(1);
+          }
+        }
+        
+        deploy();
+        EOF
+        
+        # Run deployment
+        PROJECT_DATA='${{ github.event.inputs.project_data }}' APP_NAME='${{ github.event.inputs.app_name }}' node deploy.js
+        
+    - name: Display deployment results
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📱 Build ID: ${{ steps.deploy.outputs.build_id }}"
+        echo "🔗 TestFlight Link: ${{ steps.deploy.outputs.testflight_link }}"
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up..."
+        rm -rf ~/private_keys
+        echo "✅ Cleanup completed" 
