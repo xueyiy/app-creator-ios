@@ -542,8 +542,28 @@ ${indent})`;
 
   generateImageWidget(props, indent) {
     const borderRadius = parseFloat(props.borderRadius) || 8;
+    const src = props.src || '';
+    const alt = props.alt || 'Image';
+    const objectFit = props.objectFit || 'cover';
+    
+    // Convert objectFit to Flutter's BoxFit
+    let boxFit = 'BoxFit.cover';
+    switch (objectFit) {
+      case 'contain':
+        boxFit = 'BoxFit.contain';
+        break;
+      case 'fill':
+        boxFit = 'BoxFit.fill';
+        break;
+      case 'cover':
+      default:
+        boxFit = 'BoxFit.cover';
+        break;
+    }
 
-    return `${indent}Container(
+    if (!src || src.trim() === '') {
+      // Fallback for empty src
+      return `${indent}Container(
 ${indent}  decoration: BoxDecoration(
 ${indent}    color: Colors.grey[300],
 ${indent}    borderRadius: BorderRadius.circular(${borderRadius}),
@@ -552,6 +572,59 @@ ${indent}  child: Icon(
 ${indent}    Icons.image,
 ${indent}    size: 32,
 ${indent}    color: Colors.grey[600],
+${indent}  ),
+${indent})`;
+    }
+
+    // Use ClipRRect for border radius and Image.network for actual images
+    return `${indent}ClipRRect(
+${indent}  borderRadius: BorderRadius.circular(${borderRadius}),
+${indent}  child: Image.network(
+${indent}    '${src.replace(/'/g, "\\'")}',
+${indent}    fit: ${boxFit},
+${indent}    loadingBuilder: (context, child, loadingProgress) {
+${indent}      if (loadingProgress == null) return child;
+${indent}      return Container(
+${indent}        decoration: BoxDecoration(
+${indent}          color: Colors.grey[300],
+${indent}          borderRadius: BorderRadius.circular(${borderRadius}),
+${indent}        ),
+${indent}        child: Center(
+${indent}          child: CircularProgressIndicator(
+${indent}            value: loadingProgress.expectedTotalBytes != null
+${indent}                ? loadingProgress.cumulativeBytesLoaded / 
+${indent}                  loadingProgress.expectedTotalBytes!
+${indent}                : null,
+${indent}          ),
+${indent}        ),
+${indent}      );
+${indent}    },
+${indent}    errorBuilder: (context, error, stackTrace) {
+${indent}      return Container(
+${indent}        decoration: BoxDecoration(
+${indent}          color: Colors.grey[300],
+${indent}          borderRadius: BorderRadius.circular(${borderRadius}),
+${indent}        ),
+${indent}        child: Column(
+${indent}          mainAxisAlignment: MainAxisAlignment.center,
+${indent}          children: [
+${indent}            Icon(
+${indent}              Icons.broken_image,
+${indent}              size: 32,
+${indent}              color: Colors.grey[600],
+${indent}            ),
+${indent}            SizedBox(height: 4),
+${indent}            Text(
+${indent}              'Image not available',
+${indent}              style: TextStyle(
+${indent}                fontSize: 12,
+${indent}                color: Colors.grey[600],
+${indent}              ),
+${indent}            ),
+${indent}          ],
+${indent}        ),
+${indent}      );
+${indent}    },
 ${indent}  ),
 ${indent})`;
   }
