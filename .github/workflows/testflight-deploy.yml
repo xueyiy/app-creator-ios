@@ -70,15 +70,15 @@ jobs:
         echo "📄 Package.json contents:"
         cat backend/package.json
         echo ""
-        echo "🔄 Starting npm install with timeout..."
+        echo "🔄 Starting npm install..."
         
         cd backend
         
         # Clear npm cache first
         npm cache clean --force
         
-        # Install with verbose logging and timeout
-        timeout 600 npm install --verbose --no-audit --no-fund
+        # Install with optimized settings for CI/CD
+        npm install --verbose --no-audit --no-fund --prefer-offline --no-optional
         
         echo "✅ Node.js dependencies installed successfully"
         echo "📦 Installed packages:"
