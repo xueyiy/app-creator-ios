@@ -24,7 +24,7 @@
           },
           "metadata": {
             "createdAt": "2025-08-04T15:22:34.131Z",
-            "updatedAt": "2025-08-04T15:42:42.640Z"
+            "updatedAt": "2025-08-04T15:42:32.319Z"
           }
         },
         {
@@ -54,7 +54,7 @@
           },
           "metadata": {
             "createdAt": "2025-08-04T15:22:34.131Z",
-            "updatedAt": "2025-08-04T15:42:42.640Z"
+            "updatedAt": "2025-08-04T15:42:32.319Z"
           }
         },
         {
@@ -78,7 +78,7 @@
           },
           "metadata": {
             "createdAt": "2025-08-04T15:22:34.131Z",
-            "updatedAt": "2025-08-04T15:42:42.640Z"
+            "updatedAt": "2025-08-04T15:42:32.319Z"
           }
         }
       ],
@@ -86,15 +86,19 @@
         "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "createdAt": "2025-08-04T15:42:42.640Z",
-        "updatedAt": "2025-08-04T15:42:29.410Z",
-        "totalComponents": 3
+        "createdAt": "2025-06-02T14:30:08.410Z",
+        "updatedAt": "2025-06-06T15:27:20.427Z",
+        "totalComponents": 3,
+        "canvasSize": {
+          "width": "100%",
+          "height": "auto"
+        }
       }
     }
   ],
   "projectId": null,
   "templateId": "smartz",
-  "buildTime": "2025-08-04T15:42:48.791Z",
+  "buildTime": "2025-08-04T16:02:22.565Z",
   "appIcon": null,
   "version": "1.0.0",
   "buildNumber": "1"

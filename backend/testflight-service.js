@@ -15,28 +15,42 @@ class TestFlightService {
     this.privateKey = process.env.APP_STORE_CONNECT_PRIVATE_KEY;
     
     // If environment variable is not available or invalid, try to read from file
-    if (!this.privateKey) {
-      try {
-        const keyPath = path.join(__dirname, 'keys', `AuthKey_${this.keyId}.p8`);
-        if (fs.existsSync(keyPath)) {
-          this.privateKey = fs.readFileSync(keyPath, 'utf8');
-          console.log('📁 Loaded private key from file:', keyPath);
+    if (!this.privateKey && this.keyId) {
+      const possiblePaths = [
+        // Standard pattern: AuthKey_{keyId}.p8
+        path.join(__dirname, 'keys', `AuthKey_${this.keyId}.p8`),
+        // Alternative pattern: Find any AuthKey_*.p8 file
+        ...this.findAuthKeyFiles(path.join(__dirname, 'keys')),
+        // Home directory fallback
+        path.join(process.env.HOME || os.homedir(), 'private_keys', `AuthKey_${this.keyId}.p8`),
+      ];
+
+      for (const keyPath of possiblePaths) {
+        if (keyPath && fs.existsSync(keyPath)) {
+          try {
+            this.privateKey = fs.readFileSync(keyPath, 'utf8');
+            console.log('📁 Loaded private key from file:', keyPath);
+            break;
+          } catch (error) {
+            console.warn('⚠️ Could not read private key from file:', keyPath, error.message);
+          }
         }
-      } catch (error) {
-        console.warn('⚠️ Could not read private key from file:', error.message);
       }
     }
     
-    // Try alternative path in user home directory
-    if (!this.privateKey && this.keyId) {
-      try {
-        const homeKeyPath = path.join(process.env.HOME || os.homedir(), 'private_keys', `AuthKey_${this.keyId}.p8`);
-        if (fs.existsSync(homeKeyPath)) {
-          this.privateKey = fs.readFileSync(homeKeyPath, 'utf8');
-          console.log('🏠 Loaded private key from home directory:', homeKeyPath);
-        }
-      } catch (error) {
-        console.warn('⚠️ Could not read private key from home directory:', error.message);
+    // Log the loading status for debugging
+    if (this.privateKey) {
+      console.log('✅ Private key loaded successfully');
+      console.log(`🔑 Key ID: ${this.keyId}`);
+      console.log(`🏢 Issuer ID: ${this.issuerId ? this.issuerId.substring(0, 8) + '...' : 'NOT SET'}`);
+    } else {
+      console.log('❌ Private key not found. Checked paths:');
+      console.log(`   - Environment variable: APP_STORE_CONNECT_PRIVATE_KEY`);
+      if (this.keyId) {
+        console.log(`   - File: backend/keys/AuthKey_${this.keyId}.p8`);
+        console.log(`   - Home: ~/private_keys/AuthKey_${this.keyId}.p8`);
+      } else {
+        console.log('   - APP_STORE_CONNECT_KEY_ID not set');
       }
     }
     
@@ -44,6 +58,21 @@ class TestFlightService {
     this.appId = process.env.APP_STORE_CONNECT_APP_ID;
     
     this.baseURL = 'https://api.appstoreconnect.apple.com/v1';
+  }
+
+  // Helper method to find any AuthKey_*.p8 files in a directory
+  findAuthKeyFiles(directory) {
+    try {
+      if (!fs.existsSync(directory)) return [];
+      
+      const files = fs.readdirSync(directory);
+      return files
+        .filter(file => file.startsWith('AuthKey_') && file.endsWith('.p8'))
+        .map(file => path.join(directory, file));
+    } catch (error) {
+      console.warn('⚠️ Could not scan directory for AuthKey files:', directory, error.message);
+      return [];
+    }
   }
 
   // Generate JWT token for App Store Connect API
