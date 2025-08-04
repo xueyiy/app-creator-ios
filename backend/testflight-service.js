@@ -4,12 +4,42 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const os = require('os');
 
 class TestFlightService {
   constructor() {
     this.issuerId = process.env.APP_STORE_CONNECT_ISSUER_ID;
     this.keyId = process.env.APP_STORE_CONNECT_KEY_ID;
+    
+    // Try to load private key from environment variable first
     this.privateKey = process.env.APP_STORE_CONNECT_PRIVATE_KEY;
+    
+    // If environment variable is not available or invalid, try to read from file
+    if (!this.privateKey) {
+      try {
+        const keyPath = path.join(__dirname, 'keys', `AuthKey_${this.keyId}.p8`);
+        if (fs.existsSync(keyPath)) {
+          this.privateKey = fs.readFileSync(keyPath, 'utf8');
+          console.log('📁 Loaded private key from file:', keyPath);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not read private key from file:', error.message);
+      }
+    }
+    
+    // Try alternative path in user home directory
+    if (!this.privateKey && this.keyId) {
+      try {
+        const homeKeyPath = path.join(process.env.HOME || os.homedir(), 'private_keys', `AuthKey_${this.keyId}.p8`);
+        if (fs.existsSync(homeKeyPath)) {
+          this.privateKey = fs.readFileSync(homeKeyPath, 'utf8');
+          console.log('🏠 Loaded private key from home directory:', homeKeyPath);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not read private key from home directory:', error.message);
+      }
+    }
+    
     this.bundleId = process.env.BUNDLE_ID || 'com.visios.nocode';
     this.appId = process.env.APP_STORE_CONNECT_APP_ID;
     
@@ -20,6 +50,11 @@ class TestFlightService {
   generateJWT() {
     if (!this.privateKey || !this.keyId || !this.issuerId) {
       throw new Error('Missing App Store Connect credentials');
+    }
+
+    // Validate private key format
+    if (!this.privateKey.includes('BEGIN PRIVATE KEY')) {
+      throw new Error('Invalid private key format - must be a PEM formatted private key');
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -36,10 +71,16 @@ class TestFlightService {
       typ: 'JWT'
     };
 
-    return jwt.sign(payload, this.privateKey, { 
-      algorithm: 'ES256',
-      header 
-    });
+    try {
+      return jwt.sign(payload, this.privateKey, { 
+        algorithm: 'ES256',
+        header 
+      });
+    } catch (error) {
+      console.error('❌ JWT signing failed:', error.message);
+      console.error('🔑 Private key preview:', this.privateKey.substring(0, 50) + '...');
+      throw new Error(`JWT signing failed: ${error.message}`);
+    }
   }
 
   // Get app information from App Store Connect
