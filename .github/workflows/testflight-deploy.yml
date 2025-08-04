@@ -3,35 +3,35 @@ name: Deploy to TestFlight
 on:
   workflow_dispatch:
     inputs:
-      project_data:
-        description: 'Project data JSON (from your app)'
-        required: true
-        type: string
       app_name:
-        description: 'App name for the build'
+        description: 'App Name'
         required: true
-        type: string
-        default: 'NoCodeApp'
+        default: 'My Flutter App'
+      bundle_id:
+        description: 'Bundle ID'
+        required: true
+        default: 'com.visios.nocode'
+      version:
+        description: 'App Version'
+        required: true
+        default: '1.0.0'
+      build_number:
+        description: 'Build Number'
+        required: true
+        default: '1'
 
 jobs:
-  deploy:
+  deploy-testflight:
     runs-on: macos-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: 'backend/package-lock.json'
         
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.1'
+        flutter-version: '3.19.0'
         channel: 'stable'
         
     - name: Setup Xcode
@@ -39,223 +39,142 @@ jobs:
       with:
         xcode-version: latest-stable
         
-    - name: Verify Flutter setup
+    - name: Create Flutter project structure
       run: |
-        flutter doctor -v
-        flutter --version
-        echo "✅ Dart SDK version check:"
-        dart --version
+        echo "🏗️ Creating Flutter project structure..."
+        mkdir -p flutter_project
+        cd flutter_project
         
-    - name: Install Flutter dependencies
-      run: |
-        cd flutter_app
-        flutter pub get
-        flutter clean
+        # Initialize Flutter project
+        flutter create . --org=${{ github.event.inputs.bundle_id }} --project-name=app
         
-    - name: Create private key file
-      run: |
-        mkdir -p ~/private_keys
-        echo "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}" > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
-        chmod 600 ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
-        echo "✅ Private key file created"
+        # Create the app using our backend service
+        echo "📱 Generating app from template..."
+        curl -X POST "https://your-server.com/api/package-flutter" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "templateId": "default",
+            "projectId": "github-action-build",
+            "template": {},
+            "deploymentInfo": {
+              "appName": "${{ github.event.inputs.app_name }}",
+              "bundleId": "${{ github.event.inputs.bundle_id }}",
+              "version": "${{ github.event.inputs.version }}",
+              "buildNumber": "${{ github.event.inputs.build_number }}"
+            }
+          }' \
+          --output app_package.zip
+          
+        # Extract the generated app
+        unzip -o app_package.zip
         
-    - name: Setup iOS signing
-      run: |
-        # Create keychain for code signing
-        security create-keychain -p "" build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p "" build.keychain
-        security set-keychain-settings -t 3600 -u build.keychain
-        
-        # Import certificates if provided
-        if [[ -n "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE }}" ]]; then
-          echo "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
-          echo "✅ Distribution certificate imported"
-        else
-          echo "⚠️ No distribution certificate provided, using automatic signing"
-        fi
-        
-        # Import provisioning profile if provided
-        if [[ -n "${{ secrets.IOS_PROVISIONING_PROFILE }}" ]]; then
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/build.mobileprovision
-          echo "✅ Provisioning profile imported"
-        else
-          echo "⚠️ No provisioning profile provided, using automatic signing"
-        fi
-        
-    - name: Install Node.js dependencies
-      timeout-minutes: 10
-      run: |
-        echo "📦 Installing Node.js dependencies..."
-        echo "📁 Current directory: $(pwd)"
-        echo "📁 Backend directory contents:"
-        ls -la backend/
-        echo ""
-        echo "📄 Package.json contents:"
-        cat backend/package.json
-        echo ""
-        echo "🔄 Starting npm install..."
-        
-        cd backend
-        
-        # Clear npm cache first
-        npm cache clean --force
-        
-        # Install with optimized settings for CI/CD
-        npm install --verbose --no-audit --no-fund --prefer-offline --no-optional
-        
-        echo "✅ Node.js dependencies installed successfully"
-        echo "📦 Installed packages:"
-        npm list --depth=0
-        
-    - name: Build and deploy to TestFlight
-      timeout-minutes: 20
+    - name: Configure iOS signing
       env:
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-        BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        NODE_ENV: production
-        FORCE_REAL_BUILDS: true
+        IOS_CERTIFICATE_P12: ${{ secrets.IOS_CERTIFICATE_P12 }}
+        IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
       run: |
-        echo "🚀 Starting TestFlight deployment..."
-        echo "📱 App Name: ${{ github.event.inputs.app_name }}"
-        echo "🔧 Environment: Production with real builds"
-        echo "📁 Repository structure (minimal iOS build repo):"
-        ls -la
+        echo "🔐 Setting up iOS code signing..."
         
-        cd backend
+        # Create private_keys directory for App Store Connect API
+        mkdir -p ~/private_keys
+        echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8
         
-        # Create deployment script that uses direct Flutter build
-        cat > deploy.js << 'EOF'
-        const TestFlightService = require('./testflight-service');
-        const { spawn } = require('child_process');
-        const fs = require('fs');
-        const path = require('path');
+        # Setup keychain
+        security create-keychain -p "" build.keychain
+        security list-keychains -s build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+        security set-keychain-settings -t 3600 -u build.keychain
         
-        async function deploy() {
-          try {
-            const service = new TestFlightService();
-            const projectData = JSON.parse(process.env.PROJECT_DATA);
-            const appName = process.env.APP_NAME;
-            
-            console.log('📦 Updating Flutter app with project data...');
-            
-            // Update the Flutter app with the project data
-            const flutterProjectPath = path.join(__dirname, '..', 'flutter_app');
-            const buildNumber = Math.floor(Date.now() / 1000);
-            const version = '1.0.0';
-            
-            await service.updateFlutterApp(flutterProjectPath, projectData, buildNumber, version);
-            console.log('✅ Flutter app updated successfully');
-            
-            console.log('🔨 Building Flutter iOS app...');
-            
-            // Build Flutter app directly (not through packageFlutterApp)
-            await new Promise((resolve, reject) => {
-              const flutterBuild = spawn('flutter', ['build', 'ios', '--release', '--no-codesign'], {
-                cwd: flutterProjectPath,
-                stdio: 'inherit'
-              });
-              
-              flutterBuild.on('close', (code) => {
-                if (code === 0) {
-                  console.log('✅ Flutter build completed');
-                  resolve();
-                } else {
-                  reject(new Error(`Flutter build failed with code ${code}`));
-                }
-              });
-            });
-            
-            console.log('📦 Creating simulated IPA for GitHub Actions...');
-            
-            // For GitHub Actions, create a simulated IPA since the real upload is handled by API
-            const ipaPath = path.join(flutterProjectPath, 'build', 'Runner.ipa');
-            const simulatedIpaContent = {
-              app_name: appName,
-              bundle_id: process.env.BUNDLE_ID,
-              build_number: buildNumber,
-              version: version,
-              platform: 'iOS',
-              built_at: new Date().toISOString(),
-              build_environment: 'GitHub Actions',
-              flutter_version: 'latest',
-              note: 'This is a simulated IPA for GitHub Actions. Real build will be handled by TestFlight service.'
-            };
-            
-            // Create a ZIP file with the simulation data
-            const archiver = require('archiver');
-            const fs = require('fs');
-            
-            await new Promise((resolve, reject) => {
-              const output = fs.createWriteStream(ipaPath);
-              const archive = archiver('zip', { zlib: { level: 9 } });
-              
-              output.on('close', () => {
-                console.log('✅ Simulated IPA created (' + archive.pointer() + ' total bytes)');
-                resolve();
-              });
-              
-              archive.on('error', (err) => {
-                reject(err);
-              });
-              
-              archive.pipe(output);
-              archive.append(JSON.stringify(simulatedIpaContent, null, 2), { name: 'app_info.json' });
-              archive.append('<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>' + process.env.BUNDLE_ID + '</string></dict></plist>', { name: 'Payload/Runner.app/Info.plist' });
-              archive.finalize();
-            });
-            
-            console.log('✅ Simulated IPA created for GitHub Actions deployment');
-            
-            console.log('📤 Uploading to TestFlight...');
-            const appConfig = {
-              bundleId: process.env.BUNDLE_ID,
-              teamId: process.env.APPLE_TEAM_ID
-            };
-            
-            const upload = await service.uploadBuild(ipaPath, appConfig);
-            console.log('✅ Upload completed:', upload.id);
-            
-            console.log('🔗 Generating public link...');
-            const link = await service.generatePublicLink(upload.id);
-            console.log('✅ Public link generated');
-            
-            console.log('🎉 Deployment successful!');
-            console.log('📱 Build ID:', upload.id);
-            console.log('🔗 TestFlight Link:', link.publicLink);
-            
-            // Set output for GitHub Actions
-            console.log('::set-output name=build_id::' + upload.id);
-            console.log('::set-output name=testflight_link::' + link.publicLink);
-            
-          } catch (error) {
-            console.error('❌ Deployment failed:', error.message);
-            console.error('📋 Error stack:', error.stack);
-            process.exit(1);
-          }
-        }
+        # Import certificate
+        echo "$IOS_CERTIFICATE_P12" | base64 --decode > certificate.p12
+        security import certificate.p12 -k build.keychain -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
         
-        deploy();
+        # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+        
+    - name: Build iOS app
+      run: |
+        cd flutter_project
+        echo "🔨 Building Flutter iOS app..."
+        
+        # Get dependencies
+        flutter pub get
+        
+        # Build iOS
+        flutter build ios --release --no-codesign
+        
+        # Create archive
+        xcodebuild -workspace ios/Runner.xcworkspace \
+          -scheme Runner \
+          -configuration Release \
+          -destination generic/platform=iOS \
+          -archivePath build/ios/Runner.xcarchive \
+          archive
+          
+        # Export IPA
+        xcodebuild -exportArchive \
+          -archivePath build/ios/Runner.xcarchive \
+          -exportPath build/ios/ipa \
+          -exportOptionsPlist ios/exportOptions.plist
+          
+    - name: Upload to TestFlight
+      env:
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      run: |
+        cd flutter_project
+        echo "📤 Uploading to TestFlight..."
+        
+        # Find the IPA file
+        IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+        echo "📱 IPA Path: $IPA_PATH"
+        
+        # Upload using altool
+        xcrun altool --upload-app \
+          --type ios \
+          --file "$IPA_PATH" \
+          --apiKey $APP_STORE_CONNECT_KEY_ID \
+          --apiIssuer $APP_STORE_CONNECT_ISSUER_ID \
+          --show-progress
+          
+    - name: Create exportOptions.plist
+      run: |
+        cd flutter_project
+        cat > ios/exportOptions.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+        </dict>
+        </plist>
         EOF
         
-        # Run deployment
-        PROJECT_DATA='${{ github.event.inputs.project_data }}' APP_NAME='${{ github.event.inputs.app_name }}' node deploy.js
-        
-    - name: Display deployment results
-      run: |
-        echo "🎉 Deployment completed successfully!"
-        echo "📱 Build ID: ${{ steps.deploy.outputs.build_id }}"
-        echo "🔗 TestFlight Link: ${{ steps.deploy.outputs.testflight_link }}"
-        
-    - name: Cleanup
+    - name: Notify completion
       if: always()
       run: |
-        echo "🧹 Cleaning up..."
-        rm -rf ~/private_keys
-        echo "✅ Cleanup completed" 
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ TestFlight deployment completed successfully!"
+          echo "📱 App: ${{ github.event.inputs.app_name }}"
+          echo "📦 Bundle ID: ${{ github.event.inputs.bundle_id }}"
+          echo "🔢 Version: ${{ github.event.inputs.version }} (${{ github.event.inputs.build_number }})"
+        else
+          echo "❌ TestFlight deployment failed!"
+        fi 

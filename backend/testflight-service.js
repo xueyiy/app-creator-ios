@@ -8,14 +8,22 @@ const os = require('os');
 
 class TestFlightService {
   constructor() {
+    console.log('🚀 Initializing TestFlightService...');
+    console.log('🔍 Loading App Store Connect credentials...');
+    
     this.issuerId = process.env.APP_STORE_CONNECT_ISSUER_ID;
     this.keyId = process.env.APP_STORE_CONNECT_KEY_ID;
     
+    console.log(`🏢 Issuer ID from env: ${this.issuerId ? '✅ Set' : '❌ Not set'}`);
+    console.log(`🔑 Key ID from env: ${this.keyId ? '✅ Set' : '❌ Not set'}`);
+    
     // Try to load private key from environment variable first
     this.privateKey = process.env.APP_STORE_CONNECT_PRIVATE_KEY;
+    console.log(`🔐 Private key from env: ${this.privateKey ? '✅ Present' : '❌ Not present'}`);
     
     // If environment variable is not available or invalid, try to read from file
     if (!this.privateKey && this.keyId) {
+      console.log('📁 Environment variable not available, trying to load from file...');
       const possiblePaths = [
         // Standard pattern: AuthKey_{keyId}.p8
         path.join(__dirname, 'keys', `AuthKey_${this.keyId}.p8`),
@@ -25,11 +33,19 @@ class TestFlightService {
         path.join(process.env.HOME || os.homedir(), 'private_keys', `AuthKey_${this.keyId}.p8`),
       ];
 
+      console.log('🔍 Checking possible key file paths:');
+      for (const keyPath of possiblePaths) {
+        console.log(`   📁 ${keyPath}: ${fs.existsSync(keyPath) ? '✅ Exists' : '❌ Not found'}`);
+      }
+
       for (const keyPath of possiblePaths) {
         if (keyPath && fs.existsSync(keyPath)) {
           try {
+            console.log(`📖 Reading private key from: ${keyPath}`);
             this.privateKey = fs.readFileSync(keyPath, 'utf8');
-            console.log('📁 Loaded private key from file:', keyPath);
+            console.log('✅ Private key loaded successfully from file');
+            console.log(`   📏 Key length: ${this.privateKey.length} characters`);
+            console.log(`   📄 Key format: ${this.privateKey.includes('BEGIN PRIVATE KEY') ? '✅ PEM format' : '❌ Invalid format'}`);
             break;
           } catch (error) {
             console.warn('⚠️ Could not read private key from file:', keyPath, error.message);
@@ -43,6 +59,8 @@ class TestFlightService {
       console.log('✅ Private key loaded successfully');
       console.log(`🔑 Key ID: ${this.keyId}`);
       console.log(`🏢 Issuer ID: ${this.issuerId ? this.issuerId.substring(0, 8) + '...' : 'NOT SET'}`);
+      console.log(`📦 Bundle ID: ${this.bundleId || 'NOT SET'}`);
+      console.log(`📱 App ID: ${this.appId || 'NOT SET'}`);
     } else {
       console.log('❌ Private key not found. Checked paths:');
       console.log(`   - Environment variable: APP_STORE_CONNECT_PRIVATE_KEY`);
@@ -58,6 +76,9 @@ class TestFlightService {
     this.appId = process.env.APP_STORE_CONNECT_APP_ID;
     
     this.baseURL = 'https://api.appstoreconnect.apple.com/v1';
+    
+    console.log('🏁 TestFlightService initialization complete');
+    console.log('='.repeat(60));
   }
 
   // Helper method to find any AuthKey_*.p8 files in a directory
@@ -77,14 +98,26 @@ class TestFlightService {
 
   // Generate JWT token for App Store Connect API
   generateJWT() {
+    console.log('🔑 Starting JWT generation...');
+    
     if (!this.privateKey || !this.keyId || !this.issuerId) {
+      console.log('❌ JWT generation failed - missing credentials:');
+      console.log(`   Private Key: ${this.privateKey ? '✅ Present' : '❌ Missing'}`);
+      console.log(`   Key ID: ${this.keyId ? '✅ Present' : '❌ Missing'}`);
+      console.log(`   Issuer ID: ${this.issuerId ? '✅ Present' : '❌ Missing'}`);
       throw new Error('Missing App Store Connect credentials');
     }
 
+    console.log('✅ All credentials present for JWT generation');
+
     // Validate private key format
+    console.log('🔍 Validating private key format...');
     if (!this.privateKey.includes('BEGIN PRIVATE KEY')) {
+      console.log('❌ Invalid private key format detected');
+      console.log(`   Key starts with: ${this.privateKey.substring(0, 50)}...`);
       throw new Error('Invalid private key format - must be a PEM formatted private key');
     }
+    console.log('✅ Private key format validation passed');
 
     const now = Math.floor(Date.now() / 1000);
     const payload = {
@@ -100,14 +133,35 @@ class TestFlightService {
       typ: 'JWT'
     };
 
+    console.log('📋 JWT Payload created:');
+    console.log(`   🏢 Issuer (iss): ${payload.iss}`);
+    console.log(`   ⏰ Issued At (iat): ${payload.iat} (${new Date(payload.iat * 1000).toISOString()})`);
+    console.log(`   ⏰ Expires At (exp): ${payload.exp} (${new Date(payload.exp * 1000).toISOString()})`);
+    console.log(`   🎯 Audience (aud): ${payload.aud}`);
+    
+    console.log('📋 JWT Header created:');
+    console.log(`   🔐 Algorithm (alg): ${header.alg}`);
+    console.log(`   🔑 Key ID (kid): ${header.kid}`);
+    console.log(`   📝 Type (typ): ${header.typ}`);
+
     try {
-      return jwt.sign(payload, this.privateKey, { 
+      console.log('🔐 Signing JWT with ES256 algorithm...');
+      const token = jwt.sign(payload, this.privateKey, { 
         algorithm: 'ES256',
         header 
       });
+      console.log('✅ JWT signed successfully!');
+      console.log(`   Token length: ${token.length} characters`);
+      console.log(`   Token preview: ${token.substring(0, 50)}...`);
+      return token;
     } catch (error) {
       console.error('❌ JWT signing failed:', error.message);
       console.error('🔑 Private key preview:', this.privateKey.substring(0, 50) + '...');
+      console.error('🔍 Private key details:');
+      console.error(`   Length: ${this.privateKey.length} characters`);
+      console.error(`   Contains BEGIN: ${this.privateKey.includes('BEGIN PRIVATE KEY')}`);
+      console.error(`   Contains END: ${this.privateKey.includes('END PRIVATE KEY')}`);
+      console.error(`   Line count: ${this.privateKey.split('\n').length}`);
       throw new Error(`JWT signing failed: ${error.message}`);
     }
   }
@@ -115,7 +169,13 @@ class TestFlightService {
   // Get app information from App Store Connect
   async getAppInfo() {
     try {
+      console.log('📱 Getting app information from App Store Connect...');
+      console.log(`   🔍 Searching for bundle ID: ${this.bundleId}`);
+      
       const token = this.generateJWT();
+      console.log('✅ JWT token generated for app info request');
+      
+      console.log(`🌐 Making API request to: ${this.baseURL}/apps`);
       const response = await axios.get(`${this.baseURL}/apps`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -126,14 +186,34 @@ class TestFlightService {
         }
       });
 
+      console.log(`✅ API response received: ${response.status} ${response.statusText}`);
       const apps = response.data.data;
+      console.log(`📊 Found ${apps.length} app(s) with bundle ID: ${this.bundleId}`);
+      
       if (apps.length === 0) {
+        console.log('❌ No app found with the specified bundle ID');
         throw new Error(`No app found with bundle ID: ${this.bundleId}`);
       }
 
-      return apps[0];
+      const app = apps[0];
+      console.log(`✅ App found: ${app.attributes.name} (${app.id})`);
+      console.log(`   📱 Name: ${app.attributes.name}`);
+      console.log(`   🆔 App ID: ${app.id}`);
+      console.log(`   📦 Bundle ID: ${app.attributes.bundleId}`);
+      console.log(`   🏢 SKU: ${app.attributes.sku}`);
+      
+      return app;
     } catch (error) {
-      console.error('Error getting app info:', error.response?.data || error.message);
+      console.error('❌ Error getting app info:');
+      console.error(`   Message: ${error.message}`);
+      if (error.response) {
+        console.error(`   Status: ${error.response.status}`);
+        console.error(`   Status Text: ${error.response.statusText}`);
+        console.error(`   Response Data:`, JSON.stringify(error.response.data, null, 2));
+      }
+      if (error.request) {
+        console.error(`   Request Error: ${error.request}`);
+      }
       throw error;
     }
   }
@@ -2035,22 +2115,27 @@ echo "   3. Distribute to testers"
   async uploadBuild(ipaPath, appConfig) {
     try {
       console.log('📤 Starting intelligent build upload...');
+      console.log('🔍 Checking deployment environment...');
+      console.log(`   📱 Platform: ${process.platform}`);
+      console.log(`   📦 IPA Path: ${ipaPath}`);
+      console.log(`   🏗️  App Config:`, JSON.stringify(appConfig, null, 2));
       
       // Check if we have the necessary credentials
-      if (!process.env.APP_STORE_CONNECT_ISSUER_ID || !process.env.APP_STORE_CONNECT_KEY_ID || !process.env.APP_STORE_CONNECT_PRIVATE_KEY) {
-        console.log('⚠️  App Store Connect API credentials not configured. Simulating upload...');
-        
-        // Simulate successful upload for development
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        return {
-          id: 'simulated-build-' + Date.now(),
-          status: 'uploaded',
-          message: 'Build uploaded successfully (simulated)'
-        };
+      console.log('🔐 Validating App Store Connect credentials...');
+      console.log(`   🏢 Issuer ID: ${this.issuerId ? '✅ Set' : '❌ Missing'}`);
+      console.log(`   🔑 Key ID: ${this.keyId ? '✅ Set' : '❌ Missing'}`);
+      console.log(`   🔐 Private Key: ${this.privateKey ? '✅ Loaded' : '❌ Missing'}`);
+      
+      if (!this.issuerId || !this.keyId || !this.privateKey) {
+        console.log('❌ Credential validation failed!');
+        console.log('   Missing required credentials for App Store Connect API');
+        throw new Error('App Store Connect API credentials not configured');
       }
       
+      console.log('✅ All credentials validated successfully!');
+      
       // Check if xcrun (Xcode command line tools) is available
+      console.log('🛠️  Checking for Xcode command line tools...');
       const { spawn } = require('child_process');
       let hasXcrun = false;
       
@@ -2067,8 +2152,10 @@ echo "   3. Distribute to testers"
           });
           xcrunCheck.on('error', reject);
         });
+        console.log('✅ Xcode command line tools available');
       } catch (error) {
         console.log('⚠️  xcrun not available, will use API-based upload');
+        console.log(`   Reason: ${error.message}`);
         hasXcrun = false;
       }
       
@@ -2081,7 +2168,8 @@ echo "   3. Distribute to testers"
       }
       
     } catch (error) {
-      console.error('Error in upload process:', error.message);
+      console.error('❌ Error in upload process:', error.message);
+      console.error('   Stack trace:', error.stack);
       throw error;
     }
   }
@@ -2102,8 +2190,8 @@ echo "   3. Distribute to testers"
       }
       
       // Create API key file in the expected location
-      const keyPath = path.join(privateKeysDir, `AuthKey_${process.env.APP_STORE_CONNECT_KEY_ID}.p8`);
-      fs.writeFileSync(keyPath, process.env.APP_STORE_CONNECT_PRIVATE_KEY);
+      const keyPath = path.join(privateKeysDir, `AuthKey_${this.keyId}.p8`);
+      fs.writeFileSync(keyPath, this.privateKey);
       
       console.log('🔐 Created API key file at:', keyPath);
       
@@ -2194,69 +2282,113 @@ echo "   3. Distribute to testers"
   }
 
   // Alternative upload method using App Store Connect REST API (no Xcode required)
+  // NOTE: As of 2024, App Store Connect API does NOT support creating builds
+  // This method is kept for reference but will return instructions for proper upload
   async uploadBuildViaAPI(ipaPath, appConfig) {
     try {
-      console.log('📤 Starting build upload using App Store Connect REST API...');
+      console.log('📤 Attempting build upload using App Store Connect REST API...');
+      console.log('⚠️  IMPORTANT: App Store Connect API does not support build creation!');
+      console.log('🔍 API Upload Method Details:');
+      console.log(`   🌐 Base URL: ${this.baseURL}`);
+      console.log(`   📱 App ID: ${this.appId}`);
+      console.log(`   📦 Bundle ID: ${this.bundleId}`);
       
       // Check if we have the necessary credentials
-      if (!process.env.APP_STORE_CONNECT_ISSUER_ID || !process.env.APP_STORE_CONNECT_KEY_ID || !process.env.APP_STORE_CONNECT_PRIVATE_KEY) {
+      console.log('🔐 Re-validating credentials for API upload...');
+      if (!this.issuerId || !this.keyId || !this.privateKey) {
+        console.log('❌ API credentials validation failed!');
         throw new Error('App Store Connect API credentials not configured');
       }
+      console.log('✅ API credentials validated successfully!');
       
+      console.log('🔑 Generating JWT token...');
       const token = this.generateJWT();
+      console.log('✅ JWT token generated successfully');
+      console.log(`   Token preview: ${token.substring(0, 50)}...`);
+      
       const fs = require('fs');
       
-      console.log('📱 Getting app info...');
+      console.log('📱 Getting app info from App Store Connect...');
       const app = await this.getAppInfo();
+      console.log(`✅ App info retrieved: ${app.attributes.name} (${app.id})`);
       
-      console.log('📋 Creating build record...');
-      // Step 1: Create a build record
-      const buildResponse = await axios.post(`${this.baseURL}/builds`, {
-        data: {
-          type: 'builds',
-          attributes: {
-            version: appConfig.version || '1.0.1',
-            uploadedDate: new Date().toISOString(),
-            processingState: 'PROCESSING'
-          },
-          relationships: {
-            app: {
-              data: {
-                type: 'apps',
-                id: app.id
-              }
-            }
-          }
-        }
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Instead of trying to create builds, explain the limitation
+      console.log('❌ BUILD CREATION NOT SUPPORTED VIA API');
+      console.log('');
+      console.log('🚫 Apple\'s App Store Connect API does not allow creating builds.');
+      console.log('   The API only supports: GET_COLLECTION, GET_INSTANCE, UPDATE');
+      console.log('');
+      console.log('✅ RECOMMENDED SOLUTIONS:');
+      console.log('   1. 🏗️  Use GitHub Actions with macOS runners');
+      console.log('   2. 🛠️  Use Xcode\'s altool command line tool');
+      console.log('   3. 📦 Use Apple\'s Transporter app');
+      console.log('   4. 🎯 Use Xcode directly for uploads');
+      console.log('');
+      console.log('📋 FOR GITHUB ACTIONS:');
+      console.log('   - Run workflow: .github/workflows/testflight-deploy.yml');
+      console.log('   - Uses macOS runners with Xcode installed');
+      console.log('   - Builds Flutter app and uploads via altool');
+      console.log('');
+      console.log('🔧 FOR LOCAL DEVELOPMENT:');
+      console.log('   xcrun altool --upload-app \\');
+      console.log('     --type ios \\');
+      console.log(`     --file "${ipaPath}" \\`);
+      console.log(`     --apiKey ${this.keyId} \\`);
+      console.log(`     --apiIssuer ${this.issuerId} \\`);
+      console.log('     --show-progress');
+      console.log('');
       
-      const buildId = buildResponse.data.data.id;
-      console.log('✅ Build record created with ID:', buildId);
-      
-      // Step 2: Upload the IPA file using the Transporter API
-      console.log('📤 Uploading IPA file...');
+      // Get IPA file details for logging
+      console.log('📤 IPA File Details:');
       const ipaStats = fs.statSync(ipaPath);
-      console.log(`📦 IPA file size: ${(ipaStats.size / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`   📁 Path: ${ipaPath}`);
+      console.log(`   📏 Size: ${(ipaStats.size / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`   📅 Modified: ${new Date(ipaStats.mtime).toISOString()}`);
       
-      // For now, return simulated success since we can't actually upload without altool
-      // In a real implementation, you'd use Apple's Transporter API or a similar service
-      console.log('⚠️  Note: This is using API-based upload simulation');
-      console.log('💡 For production, consider using GitHub Actions with macOS runners');
-      
-      return {
-        id: buildId,
-        status: 'uploaded',
-        message: 'Build uploaded successfully via REST API',
-        uploadMethod: 'api'
-      };
+      // Return a helpful response instead of trying to create a build
+      throw new Error(`
+🚫 BUILD UPLOAD FAILED: App Store Connect API Limitation
+
+Apple's App Store Connect REST API does not support creating builds.
+The 'builds' resource only allows: GET_COLLECTION, GET_INSTANCE, UPDATE
+
+✅ SOLUTION: Use one of these methods instead:
+
+1. 🏗️  GitHub Actions (Recommended for CI/CD):
+   - Go to your repository's Actions tab
+   - Run the "Deploy to TestFlight" workflow
+   - This uses macOS runners with Xcode installed
+
+2. 🛠️  Command Line (For local development):
+   xcrun altool --upload-app --type ios --file "${ipaPath}" --apiKey ${this.keyId} --apiIssuer ${this.issuerId}
+
+3. 📱 Xcode:
+   - Open your project in Xcode
+   - Product → Archive → Distribute App → App Store Connect
+
+4. 📦 Transporter App:
+   - Download from Mac App Store
+   - Drag and drop your .ipa file
+
+For automated builds, GitHub Actions is the recommended approach.
+      `);
       
     } catch (error) {
-      console.error('Error uploading build via API:', error.response?.data || error.message);
+      console.error('❌ Build upload explanation:');
+      console.error(`   ${error.message}`);
+      
+      // If it's an API error, provide more context
+      if (error.response) {
+        console.error(`   Status: ${error.response.status}`);
+        console.error(`   Status Text: ${error.response.statusText}`);
+        if (error.response.data && error.response.data.errors) {
+          console.error(`   API Error Details:`);
+          error.response.data.errors.forEach(apiError => {
+            console.error(`     - ${apiError.title}: ${apiError.detail}`);
+          });
+        }
+      }
+      
       throw error;
     }
   }
