@@ -10,6 +10,10 @@ class TestFlightService {
   constructor() {
     console.log('🚀 Initializing TestFlightService...');
     console.log('🔍 Loading App Store Connect credentials...');
+    console.log(`   🖥️  Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`   📱 Platform: ${process.platform}`);
+    console.log(`   🔧 Node Version: ${process.version}`);
+    console.log(`   📁 Working Directory: ${process.cwd()}`);
     
     this.issuerId = process.env.APP_STORE_CONNECT_ISSUER_ID;
     this.keyId = process.env.APP_STORE_CONNECT_KEY_ID;
@@ -221,14 +225,26 @@ class TestFlightService {
   // Package Flutter app with screen data
   async packageFlutterApp(projectData) {
     try {
+      console.log('='.repeat(80));
+      console.log('📦 FLUTTER APP PACKAGING STARTED');
+      console.log('='.repeat(80));
+      console.log('📱 Packaging Flutter app with project data:');
+      console.log(`   🕐 Timestamp: ${new Date().toISOString()}`);
+      console.log(`   📁 Current Directory: ${process.cwd()}`);
+      console.log(`   🔧 Node Version: ${process.version}`);
+      console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+      
       const { templateId, projectId, template, deploymentInfo } = projectData;
       
-      console.log('📱 Packaging Flutter app with project data:');
+      console.log('📋 Project Data Summary:');
       console.log('  - Template ID:', templateId);
       console.log('  - Project ID:', projectId);
       console.log('  - Template name:', template?.name);
       console.log('  - Screens count:', template?.screens?.length || 0);
       console.log('  - App name:', deploymentInfo?.appName);
+      console.log('  - Bundle ID:', deploymentInfo?.bundleId);
+      console.log('  - Version:', deploymentInfo?.version);
+      console.log('  - Build Number:', deploymentInfo?.buildNumber);
       
       // Debug: Log complete project data structure
       console.log('🔍 Complete projectData structure:');
@@ -1728,7 +1744,17 @@ apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gra
   // Create IPA file with Flutter build process
   async createIPA(buildDir, appName, appConfig) {
     try {
+      console.log('='.repeat(80));
+      console.log('🔨 FLUTTER IPA BUILD PROCESS STARTED');
+      console.log('='.repeat(80));
       console.log('🔨 Starting Flutter iOS build process...');
+      console.log(`   🕐 Timestamp: ${new Date().toISOString()}`);
+      console.log(`   📁 Build Directory: ${buildDir}`);
+      console.log(`   📱 App Name: ${appName}`);
+      console.log(`   🏗️  App Config:`, JSON.stringify(appConfig, null, 2));
+      console.log(`   📁 Current Directory: ${process.cwd()}`);
+      console.log(`   🔧 Node Version: ${process.version}`);
+      console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
       
       const flutterProjectPath = path.join(__dirname, '..', 'flutter_app');
       
@@ -1737,12 +1763,12 @@ apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gra
       const forceRealBuilds = process.env.FORCE_REAL_BUILDS === 'true';
       const hasFlutterProject = fs.existsSync(flutterProjectPath);
       
-      console.log('🔍 Environment check:', {
-        isProduction,
-        forceRealBuilds,
-        hasFlutterProject,
-        platform: process.platform
-      });
+      console.log('🔍 Environment check:');
+      console.log(`   - Production: ${isProduction}`);
+      console.log(`   - Force Real Builds: ${forceRealBuilds}`);
+      console.log(`   - Has Flutter Project: ${hasFlutterProject}`);
+      console.log(`   - Platform: ${process.platform}`);
+      console.log(`   - Flutter Project Path: ${flutterProjectPath}`);
       
       // Check if Flutter project exists
       if (!hasFlutterProject) {
@@ -1756,7 +1782,9 @@ apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gra
       
       // Check if we're on macOS (required for iOS builds)
       if (process.platform !== 'darwin') {
-        console.log('⚠️  Not running on macOS - iOS builds require macOS');
+        console.log('⚠️  PLATFORM CHECK: Not running on macOS');
+        console.log(`   Current platform: ${process.platform}`);
+        console.log(`   Required platform: darwin (macOS)`);
         if (isProduction || forceRealBuilds) {
           throw new Error('iOS builds require macOS but running on: ' + process.platform);
         }
@@ -2114,27 +2142,90 @@ echo "   3. Distribute to testers"
   // Upload build to App Store Connect using altool
   async uploadBuild(ipaPath, appConfig) {
     try {
+      console.log('='.repeat(80));
+      console.log('🚀 TESTFLIGHT DEPLOYMENT ATTEMPT STARTED');
+      console.log('='.repeat(80));
       console.log('📤 Starting intelligent build upload...');
       console.log('🔍 Checking deployment environment...');
       console.log(`   📱 Platform: ${process.platform}`);
       console.log(`   📦 IPA Path: ${ipaPath}`);
       console.log(`   🏗️  App Config:`, JSON.stringify(appConfig, null, 2));
+      console.log(`   🕐 Timestamp: ${new Date().toISOString()}`);
+      console.log(`   📁 Current Directory: ${process.cwd()}`);
+      console.log(`   🔧 Node Version: ${process.version}`);
+      console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
       
       // Check if we have the necessary credentials
+      console.log('');
       console.log('🔐 Validating App Store Connect credentials...');
-      console.log(`   🏢 Issuer ID: ${this.issuerId ? '✅ Set' : '❌ Missing'}`);
-      console.log(`   🔑 Key ID: ${this.keyId ? '✅ Set' : '❌ Missing'}`);
-      console.log(`   🔐 Private Key: ${this.privateKey ? '✅ Loaded' : '❌ Missing'}`);
+      console.log(`   🏢 Issuer ID: ${this.issuerId ? '✅ Set (' + this.issuerId.substring(0, 8) + '...)' : '❌ Missing'}`);
+      console.log(`   🔑 Key ID: ${this.keyId ? '✅ Set (' + this.keyId + ')' : '❌ Missing'}`);
+      console.log(`   🔐 Private Key: ${this.privateKey ? '✅ Loaded (' + this.privateKey.length + ' chars)' : '❌ Missing'}`);
       
       if (!this.issuerId || !this.keyId || !this.privateKey) {
         console.log('❌ Credential validation failed!');
         console.log('   Missing required credentials for App Store Connect API');
+        console.log('   This should not happen if GitHub Actions is being used properly.');
         throw new Error('App Store Connect API credentials not configured');
       }
       
       console.log('✅ All credentials validated successfully!');
       
-      // Check if xcrun (Xcode command line tools) is available
+      // For non-macOS environments, explain GitHub Actions requirement
+      if (process.platform !== 'darwin') {
+        console.log('');
+        console.log('⚠️  PLATFORM DETECTION: Not running on macOS');
+        console.log(`   Current platform: ${process.platform}`);
+        console.log(`   Expected platform: darwin (macOS)`);
+        console.log('');
+        console.log('🚫 DEPLOYMENT NOT SUPPORTED ON THIS PLATFORM');
+        console.log('');
+        console.log('✅ SOLUTION: Use GitHub Actions with macOS runners');
+        console.log('   1. 🏗️  Go to: https://github.com/xueyiy/app-creator-ios/actions');
+        console.log('   2. 🚀 Run "Deploy to TestFlight" workflow');
+        console.log('   3. 📱 Uses real macOS runners with Xcode');
+        console.log('   4. 🔨 Builds real Flutter apps');
+        console.log('   5. 📤 Uploads to actual TestFlight');
+        console.log('');
+        console.log('💡 DEBUGGING INFO:');
+        console.log('   - Your frontend should automatically trigger GitHub Actions');
+        console.log('   - This server endpoint should NOT be called for iOS builds');
+        console.log('   - Check if frontend has GitHub token configured');
+        console.log('   - Check if GitHub Actions workflow exists');
+        console.log('');
+        console.log('🔧 TROUBLESHOOTING:');
+        console.log('   1. Check browser console for GitHub Actions logs');
+        console.log('   2. Verify .env.local has NEXT_PUBLIC_GITHUB_TOKEN');
+        console.log('   3. Restart development server to load env vars');
+        console.log('   4. Check GitHub repository: xueyiy/app-creator-ios');
+        console.log('');
+        
+        throw new Error(`
+🚫 iOS DEPLOYMENT REQUIRES macOS
+
+This server is running on ${process.platform}, but iOS builds require macOS with Xcode.
+
+✅ SOLUTION: GitHub Actions (Automatic)
+Your frontend should automatically use GitHub Actions instead of this server.
+
+🔧 Manual Alternative:
+1. Go to: https://github.com/xueyiy/app-creator-ios/actions
+2. Run "Deploy to TestFlight" workflow manually
+3. Monitor progress in GitHub Actions logs
+
+For automated deployments, ensure your frontend has GitHub token configured.
+
+📋 DEBUGGING CHECKLIST:
+□ Frontend has NEXT_PUBLIC_GITHUB_TOKEN in .env.local
+□ Development server restarted after env changes
+□ GitHub repository xueyiy/app-creator-ios exists
+□ GitHub Actions workflow exists in repository
+□ Browser console shows "🔄 Attempting GitHub Actions deployment..."
+        `);
+      }
+      
+      // If we're on macOS, try altool
+      console.log('');
       console.log('🛠️  Checking for Xcode command line tools...');
       const { spawn } = require('child_process');
       let hasXcrun = false;
@@ -2154,7 +2245,7 @@ echo "   3. Distribute to testers"
         });
         console.log('✅ Xcode command line tools available');
       } catch (error) {
-        console.log('⚠️  xcrun not available, will use API-based upload');
+        console.log('⚠️  xcrun not available, cannot upload via altool');
         console.log(`   Reason: ${error.message}`);
         hasXcrun = false;
       }
@@ -2163,13 +2254,22 @@ echo "   3. Distribute to testers"
         console.log('🛠️  Using xcrun altool for upload...');
         return this.uploadBuildViaAltool(ipaPath, appConfig);
       } else {
-        console.log('🌐 Using API-based upload (no Xcode required)...');
-        return this.uploadBuildViaAPI(ipaPath, appConfig);
+        console.log('');
+        console.log('❌ NO UPLOAD METHOD AVAILABLE');
+        console.log('   - Platform: Not macOS (no Xcode)');
+        console.log('   - Altool: Not available');
+        console.log('   - GitHub Actions: Should be used by frontend');
+        console.log('');
+        throw new Error('Neither GitHub Actions nor local altool available for upload');
       }
       
     } catch (error) {
+      console.log('');
+      console.log('❌ DEPLOYMENT FAILED');
+      console.log('='.repeat(80));
       console.error('❌ Error in upload process:', error.message);
       console.error('   Stack trace:', error.stack);
+      console.log('='.repeat(80));
       throw error;
     }
   }
@@ -2277,118 +2377,6 @@ echo "   3. Distribute to testers"
       
     } catch (error) {
       console.error('Error uploading build via altool:', error.message);
-      throw error;
-    }
-  }
-
-  // Alternative upload method using App Store Connect REST API (no Xcode required)
-  // NOTE: As of 2024, App Store Connect API does NOT support creating builds
-  // This method is kept for reference but will return instructions for proper upload
-  async uploadBuildViaAPI(ipaPath, appConfig) {
-    try {
-      console.log('📤 Attempting build upload using App Store Connect REST API...');
-      console.log('⚠️  IMPORTANT: App Store Connect API does not support build creation!');
-      console.log('🔍 API Upload Method Details:');
-      console.log(`   🌐 Base URL: ${this.baseURL}`);
-      console.log(`   📱 App ID: ${this.appId}`);
-      console.log(`   📦 Bundle ID: ${this.bundleId}`);
-      
-      // Check if we have the necessary credentials
-      console.log('🔐 Re-validating credentials for API upload...');
-      if (!this.issuerId || !this.keyId || !this.privateKey) {
-        console.log('❌ API credentials validation failed!');
-        throw new Error('App Store Connect API credentials not configured');
-      }
-      console.log('✅ API credentials validated successfully!');
-      
-      console.log('🔑 Generating JWT token...');
-      const token = this.generateJWT();
-      console.log('✅ JWT token generated successfully');
-      console.log(`   Token preview: ${token.substring(0, 50)}...`);
-      
-      const fs = require('fs');
-      
-      console.log('📱 Getting app info from App Store Connect...');
-      const app = await this.getAppInfo();
-      console.log(`✅ App info retrieved: ${app.attributes.name} (${app.id})`);
-      
-      // Instead of trying to create builds, explain the limitation
-      console.log('❌ BUILD CREATION NOT SUPPORTED VIA API');
-      console.log('');
-      console.log('🚫 Apple\'s App Store Connect API does not allow creating builds.');
-      console.log('   The API only supports: GET_COLLECTION, GET_INSTANCE, UPDATE');
-      console.log('');
-      console.log('✅ RECOMMENDED SOLUTIONS:');
-      console.log('   1. 🏗️  Use GitHub Actions with macOS runners');
-      console.log('   2. 🛠️  Use Xcode\'s altool command line tool');
-      console.log('   3. 📦 Use Apple\'s Transporter app');
-      console.log('   4. 🎯 Use Xcode directly for uploads');
-      console.log('');
-      console.log('📋 FOR GITHUB ACTIONS:');
-      console.log('   - Run workflow: .github/workflows/testflight-deploy.yml');
-      console.log('   - Uses macOS runners with Xcode installed');
-      console.log('   - Builds Flutter app and uploads via altool');
-      console.log('');
-      console.log('🔧 FOR LOCAL DEVELOPMENT:');
-      console.log('   xcrun altool --upload-app \\');
-      console.log('     --type ios \\');
-      console.log(`     --file "${ipaPath}" \\`);
-      console.log(`     --apiKey ${this.keyId} \\`);
-      console.log(`     --apiIssuer ${this.issuerId} \\`);
-      console.log('     --show-progress');
-      console.log('');
-      
-      // Get IPA file details for logging
-      console.log('📤 IPA File Details:');
-      const ipaStats = fs.statSync(ipaPath);
-      console.log(`   📁 Path: ${ipaPath}`);
-      console.log(`   📏 Size: ${(ipaStats.size / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`   📅 Modified: ${new Date(ipaStats.mtime).toISOString()}`);
-      
-      // Return a helpful response instead of trying to create a build
-      throw new Error(`
-🚫 BUILD UPLOAD FAILED: App Store Connect API Limitation
-
-Apple's App Store Connect REST API does not support creating builds.
-The 'builds' resource only allows: GET_COLLECTION, GET_INSTANCE, UPDATE
-
-✅ SOLUTION: Use one of these methods instead:
-
-1. 🏗️  GitHub Actions (Recommended for CI/CD):
-   - Go to your repository's Actions tab
-   - Run the "Deploy to TestFlight" workflow
-   - This uses macOS runners with Xcode installed
-
-2. 🛠️  Command Line (For local development):
-   xcrun altool --upload-app --type ios --file "${ipaPath}" --apiKey ${this.keyId} --apiIssuer ${this.issuerId}
-
-3. 📱 Xcode:
-   - Open your project in Xcode
-   - Product → Archive → Distribute App → App Store Connect
-
-4. 📦 Transporter App:
-   - Download from Mac App Store
-   - Drag and drop your .ipa file
-
-For automated builds, GitHub Actions is the recommended approach.
-      `);
-      
-    } catch (error) {
-      console.error('❌ Build upload explanation:');
-      console.error(`   ${error.message}`);
-      
-      // If it's an API error, provide more context
-      if (error.response) {
-        console.error(`   Status: ${error.response.status}`);
-        console.error(`   Status Text: ${error.response.statusText}`);
-        if (error.response.data && error.response.data.errors) {
-          console.error(`   API Error Details:`);
-          error.response.data.errors.forEach(apiError => {
-            console.error(`     - ${apiError.title}: ${apiError.detail}`);
-          });
-        }
-      }
-      
       throw error;
     }
   }
