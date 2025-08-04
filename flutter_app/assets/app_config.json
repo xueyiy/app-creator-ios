@@ -23,8 +23,8 @@
             "text": "Explore"
           },
           "metadata": {
-            "createdAt": "2025-08-04T15:22:59.244Z",
-            "updatedAt": "2025-08-04T15:22:59.245Z"
+            "createdAt": "2025-08-04T15:22:34.131Z",
+            "updatedAt": "2025-08-04T15:42:42.640Z"
           }
         },
         {
@@ -53,8 +53,8 @@
             "fontFamily": "inherit"
           },
           "metadata": {
-            "createdAt": "2025-08-04T15:22:59.245Z",
-            "updatedAt": "2025-08-04T15:22:59.245Z"
+            "createdAt": "2025-08-04T15:22:34.131Z",
+            "updatedAt": "2025-08-04T15:42:42.640Z"
           }
         },
         {
@@ -71,11 +71,14 @@
           },
           "layer": 3,
           "props": {
-            "appTitle": "Smartz"
+            "appTitle": "Smartz",
+            "backgroundColor": "#9d94b8",
+            "appIcon": "home",
+            "showAppIcon": false
           },
           "metadata": {
-            "createdAt": "2025-08-04T15:22:59.245Z",
-            "updatedAt": "2025-08-04T15:22:59.245Z"
+            "createdAt": "2025-08-04T15:22:34.131Z",
+            "updatedAt": "2025-08-04T15:42:42.640Z"
           }
         }
       ],
@@ -83,15 +86,15 @@
         "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "createdAt": "2025-08-04T15:22:59.245Z",
-        "updatedAt": "2025-08-04T15:22:28.539Z",
+        "createdAt": "2025-08-04T15:42:42.640Z",
+        "updatedAt": "2025-08-04T15:42:29.410Z",
         "totalComponents": 3
       }
     }
   ],
   "projectId": null,
   "templateId": "smartz",
-  "buildTime": "2025-08-04T15:23:06.802Z",
+  "buildTime": "2025-08-04T15:42:48.791Z",
   "appIcon": null,
   "version": "1.0.0",
   "buildNumber": "1"

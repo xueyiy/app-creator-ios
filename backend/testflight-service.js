@@ -419,11 +419,16 @@ class HomeScreen extends StatelessWidget {
     const components = screenData.components || [];
     const screenProperties = screenData.screenProperties || {};
     const screenName = screenData.screenName || 'home';
-    const backgroundColor = screenProperties.backgroundColor || '#f7f7f7';
+    const backgroundColor = screenProperties.backgroundColor || '#ffffff';
     
-    // Find AppHeader component to extract title
+    // Find AppHeader component to extract properties
     const appHeaderComponent = components.find(c => c.type === 'AppHeader');
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
+    const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
+    const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
+    const appHeaderFontSize = appHeaderComponent?.props?.fontSize || 20;
+    const showBackButton = appHeaderComponent?.props?.showBackButton || false;
+    const showMenuButton = appHeaderComponent?.props?.showMenuButton || false;
     
     // Filter out AppHeader from positioned components since it's handled by Scaffold
     const positionedComponents = components.filter(c => c.type !== 'AppHeader');
@@ -456,14 +461,32 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${appTitle}'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 2,
+        title: Text(
+          '${appTitle}',
+          style: TextStyle(
+            fontSize: ${appHeaderFontSize},
+            color: ${this.parseColorToFlutter(appHeaderTextColor)},
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: ${this.parseColorToFlutter(appHeaderBgColor)},
+        foregroundColor: ${this.parseColorToFlutter(appHeaderTextColor)},
+        elevation: 1,
+        centerTitle: true,${showBackButton ? `
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),` : ''}${showMenuButton ? `
+        actions: [
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {},
+          ),
+        ],` : ''}
       ),
       body: Container(
         width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
+        height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
         color: ${this.parseColorToFlutter(backgroundColor)},
         child: Stack(
           children: [
@@ -514,6 +537,7 @@ ${indent})`;
     }
 
     // Wrap with Positioned widget for absolute positioning
+    // Note: Coordinates are from the design canvas and position relative to the body (below AppBar)
     return `${indent}Positioned(
 ${indent}  left: ${position.x || 0}.0,
 ${indent}  top: ${position.y || 0}.0,
@@ -528,13 +552,17 @@ ${indent})`;
     const fontSize = Math.max(parseFloat(props.fontSize) || 16, 12); // Minimum 12px for mobile
     const color = this.parseColorToFlutter(props.color || '#000000');
     const fontWeight = (props.fontWeight === 'bold' || props.fontWeight === '700') ? 'FontWeight.bold' : 'FontWeight.normal';
+    const textAlign = props.textAlign === 'center' ? 'TextAlign.center' : props.textAlign === 'right' ? 'TextAlign.right' : 'TextAlign.left';
+    const fontStyle = props.fontStyle === 'italic' ? 'FontStyle.italic' : 'FontStyle.normal';
 
     return `${indent}Text(
 ${indent}  '${text.replace(/'/g, "\\'")}',
+${indent}  textAlign: ${textAlign},
 ${indent}  style: TextStyle(
 ${indent}    fontSize: ${fontSize},
 ${indent}    color: ${color},
 ${indent}    fontWeight: ${fontWeight},
+${indent}    fontStyle: ${fontStyle},
 ${indent}  ),
 ${indent})`;
   }
@@ -575,9 +603,13 @@ ${indent})`;
 
   generateButtonWidget(props, indent) {
     const text = props.text || 'Button';
-    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#2196F3');
-    const textColor = this.parseColorToFlutter(props.color || props.textColor || '#FFFFFF');
+    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#3b82f6');
+    const textColor = this.parseColorToFlutter(props.color || props.textColor || '#ffffff');
     const fontSize = Math.max(parseFloat(props.fontSize) || 14, 12);
+    const fontWeight = props.fontWeight === 'bold' || props.fontWeight === '600' || props.fontWeight === '700' ? 'FontWeight.bold' : 'FontWeight.normal';
+    const borderRadius = parseFloat(props.borderRadius) || 8;
+    const borderColor = this.parseColorToFlutter(props.borderColor || backgroundColor);
+    const borderWidth = parseFloat(props.borderWidth) || 0;
 
     return `${indent}ElevatedButton(
 ${indent}  onPressed: () {
@@ -586,13 +618,21 @@ ${indent}  },
 ${indent}  style: ElevatedButton.styleFrom(
 ${indent}    backgroundColor: ${backgroundColor},
 ${indent}    foregroundColor: ${textColor},
-${indent}    shape: RoundedRectangleBorder(
-${indent}      borderRadius: BorderRadius.circular(8.0),
+${indent}    side: BorderSide(
+${indent}      color: ${borderColor},
+${indent}      width: ${borderWidth},
 ${indent}    ),
+${indent}    shape: RoundedRectangleBorder(
+${indent}      borderRadius: BorderRadius.circular(${borderRadius}),
+${indent}    ),
+${indent}    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 ${indent}  ),
 ${indent}  child: Text(
 ${indent}    '${text.replace(/'/g, "\\'")}',
-${indent}    style: TextStyle(fontSize: ${fontSize}),
+${indent}    style: TextStyle(
+${indent}      fontSize: ${fontSize},
+${indent}      fontWeight: ${fontWeight},
+${indent}    ),
 ${indent}  ),
 ${indent})`;
   }
@@ -1038,7 +1078,7 @@ import Flutter
   }
 
   // Generate app icon contents
-  generateAppIconContents() {
+  generateAppIconContentsFixed() {
     return `{
   "images" : [
     {
@@ -1135,6 +1175,9 @@ import Flutter
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "pre-rendered" : true
   }
 }
 `;
