@@ -421,7 +421,14 @@ class HomeScreen extends StatelessWidget {
     const screenName = screenData.screenName || 'home';
     const backgroundColor = screenProperties.backgroundColor || '#f7f7f7';
     
-    console.log(`🎨 Generating Flutter code for ${components.length} components on screen: ${screenName}`);
+    // Find AppHeader component to extract title
+    const appHeaderComponent = components.find(c => c.type === 'AppHeader');
+    const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
+    
+    // Filter out AppHeader from positioned components since it's handled by Scaffold
+    const positionedComponents = components.filter(c => c.type !== 'AppHeader');
+    
+    console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName}`);
 
     return `import 'package:flutter/material.dart';
 
@@ -449,16 +456,18 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${screenData.originalName || screenName}'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('${appTitle}'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 2,
       ),
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
         color: ${this.parseColorToFlutter(backgroundColor)},
         child: Stack(
           children: [
-${components.map(component => this.generateComponentWidget(component, '            ')).join(',\n')}
+${positionedComponents.map(component => this.generateComponentWidget(component, '            ')).join(',\n')}
           ],
         ),
       ),
@@ -480,6 +489,9 @@ ${components.map(component => this.generateComponentWidget(component, '         
       case 'Text':
         widgetCode = this.generateTextWidget(props, indent);
         break;
+      case 'Heading':
+        widgetCode = this.generateHeadingWidget(props, indent);
+        break;
       case 'Button':
         widgetCode = this.generateButtonWidget(props, indent);
         break;
@@ -492,6 +504,9 @@ ${components.map(component => this.generateComponentWidget(component, '         
       case 'Container':
         widgetCode = this.generateContainerWidget(props, indent);
         break;
+      case 'AppHeader':
+        // AppHeader should not be positioned, it's handled by Scaffold appBar
+        return this.generateAppHeaderWidget(props, indent);
       default:
         widgetCode = `${indent}Container(
 ${indent}  child: Text('${type}'),
@@ -522,6 +537,40 @@ ${indent}    color: ${color},
 ${indent}    fontWeight: ${fontWeight},
 ${indent}  ),
 ${indent})`;
+  }
+
+  generateHeadingWidget(props, indent) {
+    const text = props.text || 'Heading';
+    const level = props.level || 'h1';
+    let fontSize = 24;
+    
+    // Map heading levels to font sizes
+    switch (level) {
+      case 'h1': fontSize = 32; break;
+      case 'h2': fontSize = 28; break;
+      case 'h3': fontSize = 24; break;
+      case 'h4': fontSize = 20; break;
+      case 'h5': fontSize = 18; break;
+      case 'h6': fontSize = 16; break;
+    }
+    
+    const color = this.parseColorToFlutter(props.color || '#1f2937');
+    const fontWeight = props.fontWeight === 'bold' ? 'FontWeight.bold' : 'FontWeight.w600';
+
+    return `${indent}Text(
+${indent}  '${text.replace(/'/g, "\\'")}',
+${indent}  style: TextStyle(
+${indent}    fontSize: ${fontSize},
+${indent}    color: ${color},
+${indent}    fontWeight: ${fontWeight},
+${indent}  ),
+${indent})`;
+  }
+
+  generateAppHeaderWidget(props, indent) {
+    // AppHeader is handled in the main screen generation, not as a positioned widget
+    // Return empty string since it's already handled by Scaffold appBar
+    return '';
   }
 
   generateButtonWidget(props, indent) {

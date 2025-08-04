@@ -1,814 +1,97 @@
 {
-  "appName": "AI Project - ai_project_1752518135389",
+  "appName": "AIO Smartz Camera",
   "bundleId": "com.visios.nocode",
   "screens": [
     {
-      "screenName": "home",
-      "originalName": "home",
+      "screenName": "Home",
+      "originalName": "Home",
       "components": [
         {
-          "id": "component_1753374037734",
-          "type": "Text",
-          "name": "Text",
+          "id": "component_1754320868194",
+          "type": "Button",
+          "name": "Button",
           "position": {
-            "x": 10,
-            "y": 10
+            "x": 60,
+            "y": 200
           },
           "size": {
             "width": 100,
             "height": 40
           },
-          "layer": 8,
+          "layer": 1,
           "props": {
-            "text": "Money",
-            "fontWeight": "700",
-            "fontSize": "18"
+            "text": "Explore"
           },
           "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
+            "createdAt": "2025-08-04T15:22:59.244Z",
+            "updatedAt": "2025-08-04T15:22:59.245Z"
           }
         },
         {
-          "id": "component_1753374087133",
-          "type": "Icon",
-          "name": "Icon",
-          "position": {
-            "x": 220,
-            "y": 10
-          },
-          "size": {
-            "width": 40,
-            "height": 40
-          },
-          "layer": 9,
-          "props": {
-            "iconType": "builtin",
-            "name": "user",
-            "customIconUrl": "",
-            "color": "#6b7280",
-            "size": "24",
-            "backgroundColor": "transparent",
-            "borderRadius": "0",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "padding": "0",
-            "opacity": 100,
-            "rotation": 0,
-            "hoverEffect": false,
-            "hoverColor": "#6b7280",
-            "hoverScale": 1.1
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374267811",
-          "type": "Container",
-          "name": "Container",
+          "id": "component_1754320876288",
+          "type": "Heading",
+          "name": "Heading",
           "position": {
             "x": 10,
-            "y": 60
+            "y": 130
           },
           "size": {
-            "width": 251,
-            "height": 129
-          },
-          "layer": 0,
-          "props": {
-            "padding": "16",
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "backgroundSize": "cover",
-            "backgroundPosition": "center",
-            "backgroundRepeat": "no-repeat",
-            "borderRadius": "8",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "borderStyle": "solid",
-            "opacity": 100,
-            "overflow": "hidden",
-            "minHeight": ""
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374280878",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 10,
-            "y": 70
-          },
-          "size": {
-            "width": 120,
-            "height": 21
-          },
-          "layer": 10,
-          "props": {
-            "text": "Cash Balance",
-            "fontSize": "14",
-            "fontWeight": "700"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374437685",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 10,
-            "y": 90
-          },
-          "size": {
-            "width": 92,
-            "height": 34
-          },
-          "layer": 11,
-          "props": {
-            "text": "0.00",
-            "fontWeight": "700",
-            "fontSize": "21"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374502496",
-          "type": "Button",
-          "name": "Button",
-          "position": {
-            "x": 20,
-            "y": 150
-          },
-          "size": {
-            "width": 103,
-            "height": 26
-          },
-          "layer": 12,
-          "props": {
-            "text": "Add Cash",
-            "backgroundColor": "#f7f7f7",
-            "color": "#151414",
-            "fontSize": "14",
-            "borderRadius": "20px"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374552338",
-          "type": "Button",
-          "name": "Button",
-          "position": {
-            "x": 140,
-            "y": 150
-          },
-          "size": {
-            "width": 101,
-            "height": 25
-          },
-          "layer": 13,
-          "props": {
-            "text": "Cash Out",
-            "backgroundColor": "#f7f7f7",
-            "color": "#1a1919",
-            "fontSize": "14",
-            "opacity": 1,
-            "borderRadius": "20px"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753374652719",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 160,
-            "y": 70
-          },
-          "size": {
-            "width": 104,
-            "height": 27
-          },
-          "layer": 14,
-          "props": {
-            "text": "Account & Routing >",
-            "fontSize": "9",
-            "color": "#404245"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753382441970",
-          "type": "Container",
-          "name": "Container",
-          "position": {
-            "x": 10,
-            "y": 210
-          },
-          "size": {
-            "width": 111,
-            "height": 130
-          },
-          "layer": 0,
-          "props": {
-            "padding": "16",
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "backgroundSize": "cover",
-            "backgroundPosition": "center",
-            "backgroundRepeat": "no-repeat",
-            "borderRadius": "8",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "borderStyle": "solid",
-            "opacity": 100,
-            "overflow": "hidden",
-            "minHeight": ""
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753382452236",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 20,
-            "y": 230
-          },
-          "size": {
-            "width": 100,
+            "width": 174,
             "height": 20
           },
-          "layer": 15,
+          "layer": 2,
           "props": {
-            "text": "Savings",
-            "fontSize": "10",
-            "fontWeight": "700"
+            "text": "camera",
+            "level": "h4",
+            "color": "#1f2937",
+            "fontWeight": "bold",
+            "textDecoration": "none",
+            "fontStyle": "normal",
+            "lineHeight": "normal",
+            "letterSpacing": "normal",
+            "textTransform": "none",
+            "fontFamily": "inherit"
           },
           "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
+            "createdAt": "2025-08-04T15:22:59.245Z",
+            "updatedAt": "2025-08-04T15:22:59.245Z"
           }
         },
         {
-          "id": "component_1753382459888",
-          "type": "Image",
-          "name": "Image",
+          "id": "component_1754320881835",
+          "type": "AppHeader",
+          "name": "App Header",
           "position": {
-            "x": 20,
-            "y": 250
+            "x": 0,
+            "y": 0
           },
           "size": {
-            "width": 46,
-            "height": 47
+            "width": 270,
+            "height": 64
           },
-          "layer": 16,
+          "layer": 3,
           "props": {
-            "src": "https://www.lendingstream.co.uk/blog/wp-content/uploads/2023/04/1p-Saving-Challenge.jpg",
-            "alt": "Image",
-            "objectFit": "cover",
-            "borderRadius": "22px",
-            "opacity": 100,
-            "brightness": 100,
-            "contrast": 100,
-            "saturation": 100
+            "appTitle": "Smartz"
           },
           "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383094061",
-          "type": "Image",
-          "name": "Image",
-          "position": {
-            "x": 20,
-            "y": 420
-          },
-          "size": {
-            "width": 93,
-            "height": 68
-          },
-          "layer": 17,
-          "props": {
-            "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyZYOuvNX5ZJmWCrcUMnSrIghHK9Shg06-sg&s",
-            "alt": "Image",
-            "objectFit": "cover",
-            "borderRadius": "8px",
-            "opacity": 100,
-            "brightness": 100,
-            "contrast": 100,
-            "saturation": 100
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383232556",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 20,
-            "y": 300
-          },
-          "size": {
-            "width": 56,
-            "height": 20
-          },
-          "layer": 18,
-          "props": {
-            "text": "0.00",
-            "fontSize": "12",
-            "fontWeight": "700"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383274387",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 20,
-            "y": 320
-          },
-          "size": {
-            "width": 70,
-            "height": 20
-          },
-          "layer": 19,
-          "props": {
-            "text": "Save for a goal",
-            "color": "#858585",
-            "fontSize": "8"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383353245",
-          "type": "Container",
-          "name": "Container",
-          "position": {
-            "x": 140,
-            "y": 210
-          },
-          "size": {
-            "width": 110,
-            "height": 130
-          },
-          "layer": 0,
-          "props": {
-            "padding": "16",
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "backgroundSize": "cover",
-            "backgroundPosition": "center",
-            "backgroundRepeat": "no-repeat",
-            "borderRadius": "8",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "borderStyle": "solid",
-            "opacity": 100,
-            "overflow": "hidden",
-            "minHeight": ""
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383403411",
-          "type": "Container",
-          "name": "Container",
-          "position": {
-            "x": 10,
-            "y": 370
-          },
-          "size": {
-            "width": 112,
-            "height": 126
-          },
-          "layer": 0,
-          "props": {
-            "padding": "16",
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "backgroundSize": "cover",
-            "backgroundPosition": "center",
-            "backgroundRepeat": "no-repeat",
-            "borderRadius": "8",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "borderStyle": "solid",
-            "opacity": 100,
-            "overflow": "hidden",
-            "minHeight": ""
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383432830",
-          "type": "Container",
-          "name": "Container",
-          "position": {
-            "x": 140,
-            "y": 370
-          },
-          "size": {
-            "width": 111,
-            "height": 125
-          },
-          "layer": 0,
-          "props": {
-            "padding": "16",
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "backgroundSize": "cover",
-            "backgroundPosition": "center",
-            "backgroundRepeat": "no-repeat",
-            "borderRadius": "8",
-            "borderWidth": "0",
-            "borderColor": "#e5e7eb",
-            "borderStyle": "solid",
-            "opacity": 100,
-            "overflow": "hidden",
-            "minHeight": ""
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383491221",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 20,
-            "y": 380
-          },
-          "size": {
-            "width": 99,
-            "height": 20
-          },
-          "layer": 20,
-          "props": {
-            "text": "Invest in stocks",
-            "fontSize": "10",
-            "fontWeight": "700"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383660962",
-          "type": "Image",
-          "name": "Image",
-          "position": {
-            "x": 150,
-            "y": 270
-          },
-          "size": {
-            "width": 90,
-            "height": 72
-          },
-          "layer": 21,
-          "props": {
-            "src": "https://i0.wp.com/blog.kraken.com/wp-content/uploads/2023/09/Blog-BTC.png?fit=1536%2C700&ssl=1",
-            "alt": "Image",
-            "objectFit": "cover",
-            "borderRadius": "8px",
-            "opacity": 100,
-            "brightness": 100,
-            "contrast": 100,
-            "saturation": 100
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383681031",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 150,
-            "y": 230
-          },
-          "size": {
-            "width": 97,
-            "height": 20
-          },
-          "layer": 22,
-          "props": {
-            "text": "Buy bitcoin",
-            "fontSize": "10",
-            "fontWeight": "700"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383799646",
-          "type": "Image",
-          "name": "Image",
-          "position": {
-            "x": 150,
-            "y": 420
-          },
-          "size": {
-            "width": 91,
-            "height": 68
-          },
-          "layer": 23,
-          "props": {
-            "src": "https://news.clemson.edu/wp-content/uploads/2022/03/pexels-nataliya-vaitkevich-6863259-edit-1029x636.jpg",
-            "alt": "Image",
-            "objectFit": "cover",
-            "borderRadius": "8px",
-            "opacity": 100,
-            "brightness": 100,
-            "contrast": 100,
-            "saturation": 100
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
-          }
-        },
-        {
-          "id": "component_1753383866358",
-          "type": "Text",
-          "name": "Text",
-          "position": {
-            "x": 150,
-            "y": 380
-          },
-          "size": {
-            "width": 90,
-            "height": 20
-          },
-          "layer": 24,
-          "props": {
-            "text": "Free tax filling",
-            "fontSize": "10",
-            "fontWeight": "700"
-          },
-          "metadata": {
-            "createdAt": "2025-07-30T20:29:16.673Z",
-            "updatedAt": "2025-07-30T20:29:16.673Z"
+            "createdAt": "2025-08-04T15:22:59.245Z",
+            "updatedAt": "2025-08-04T15:22:59.245Z"
           }
         }
       ],
       "screenProperties": {
-        "backgroundColor": "#f7f7f7",
-        "backgroundImage": "",
-        "minHeight": "600px"
+        "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "createdAt": "2025-07-14T18:35:36.287Z",
-        "updatedAt": "2025-07-14T18:35:36.287Z",
-        "totalComponents": 22,
-        "projectId": "ai_project_1752518135389",
-        "originalIdea": "smart home app",
-        "aiAnalysis": {
-          "screenName": "home",
-          "version": "1.0",
-          "components": [
-            {
-              "id": "component_1698230401",
-              "type": "AppHeader",
-              "name": "Main App Header",
-              "position": {
-                "x": 0,
-                "y": 0
-              },
-              "size": {
-                "width": 350,
-                "height": 70
-              },
-              "layer": 2,
-              "props": {
-                "appTitle": "Smart Home",
-                "backgroundColor": "#3b82f6",
-                "titleColor": "#ffffff",
-                "fontSize": 24,
-                "showBackButton": false,
-                "showMenuButton": true,
-                "borderRadius": "0px"
-              },
-              "metadata": {
-                "createdAt": "2023-10-25T00:00:01Z",
-                "updatedAt": "2023-10-25T00:00:01Z"
-              }
-            },
-            {
-              "id": "component_1698230402",
-              "type": "Heading",
-              "name": "Welcome Heading",
-              "position": {
-                "x": 25,
-                "y": 90
-              },
-              "size": {
-                "width": 300,
-                "height": 35
-              },
-              "layer": 3,
-              "props": {
-                "text": "Welcome Home",
-                "color": "#1f2937",
-                "fontSize": 24,
-                "fontWeight": "600",
-                "textAlign": "center",
-                "backgroundColor": "transparent",
-                "padding": "8px"
-              },
-              "metadata": {
-                "createdAt": "2023-10-25T00:00:02Z",
-                "updatedAt": "2023-10-25T00:00:02Z"
-              }
-            },
-            {
-              "id": "component_1698230403",
-              "type": "IconGrid",
-              "name": "Control Icons",
-              "position": {
-                "x": 25,
-                "y": 145
-              },
-              "size": {
-                "width": 300,
-                "height": 200
-              },
-              "layer": 4,
-              "props": {
-                "items": [
-                  {
-                    "label": "Lights",
-                    "icon": "lightbulb",
-                    "color": "#fbbf24"
-                  },
-                  {
-                    "label": "Thermostat",
-                    "icon": "thermostat",
-                    "color": "#ef4444"
-                  },
-                  {
-                    "label": "Security",
-                    "icon": "lock",
-                    "color": "#3b82f6"
-                  }
-                ],
-                "gridColumns": 3,
-                "spacing": 16,
-                "buttonHeight": 80,
-                "buttonBorderRadius": "8px",
-                "shadowEnabled": false,
-                "buttonBackgroundColor": "#ffffff",
-                "iconColor": "#666666",
-                "textColor": "#333333"
-              },
-              "metadata": {
-                "createdAt": "2023-10-25T00:00:03Z",
-                "updatedAt": "2023-10-25T00:00:03Z"
-              }
-            },
-            {
-              "id": "component_1698230404",
-              "type": "Image",
-              "name": "Home Image",
-              "position": {
-                "x": 25,
-                "y": 365
-              },
-              "size": {
-                "width": 300,
-                "height": 180
-              },
-              "layer": 5,
-              "props": {
-                "src": "https://picsum.photos/id/237/400/300",
-                "alt": "Smart Home Image",
-                "objectFit": "cover",
-                "borderRadius": "8px",
-                "opacity": 100,
-                "brightness": 100,
-                "contrast": 100,
-                "saturation": 100
-              },
-              "metadata": {
-                "createdAt": "2023-10-25T00:00:04Z",
-                "updatedAt": "2023-10-25T00:00:04Z"
-              }
-            },
-            {
-              "id": "component_1698230405",
-              "type": "TabBar",
-              "name": "Navigation Tabs",
-              "position": {
-                "x": 25,
-                "y": 620
-              },
-              "size": {
-                "width": 300,
-                "height": 50
-              },
-              "layer": 6,
-              "props": {
-                "tabs": [
-                  "Home",
-                  "Devices",
-                  "Settings"
-                ],
-                "activeTab": 0,
-                "tabIcons": [
-                  "home",
-                  "devices",
-                  "settings"
-                ],
-                "fontSize": 14,
-                "iconSize": 20,
-                "activeColor": "#3b82f6",
-                "inactiveColor": "#6b7280",
-                "backgroundColor": "#ffffff",
-                "borderColor": "#e5e7eb",
-                "borderRadius": "0px",
-                "position": "relative"
-              },
-              "metadata": {
-                "createdAt": "2023-10-25T00:00:05Z",
-                "updatedAt": "2023-10-25T00:00:05Z"
-              }
-            }
-          ],
-          "screenProperties": {
-            "backgroundColor": "#ffffff",
-            "backgroundImage": "",
-            "minHeight": "600px"
-          },
-          "metadata": {
-            "createdAt": "2023-10-25T00:00:00Z",
-            "updatedAt": "2023-10-25T00:00:00Z",
-            "totalComponents": 5,
-            "canvasSize": {
-              "width": "100%",
-              "height": "auto"
-            }
-          },
-          "updatedAt": "2023-10-25T00:00:00Z",
-          "originalName": "Home"
-        },
-        "canvasSize": {
-          "width": "100%",
-          "height": "auto"
-        }
+        "createdAt": "2025-08-04T15:22:59.245Z",
+        "updatedAt": "2025-08-04T15:22:28.539Z",
+        "totalComponents": 3
       }
     }
   ],
-  "projectId": "ai_project_1752518135389",
-  "templateId": "newProject",
-  "buildTime": "2025-08-04T14:51:08.328Z",
+  "projectId": null,
+  "templateId": "smartz",
+  "buildTime": "2025-08-04T15:23:06.802Z",
   "appIcon": null,
   "version": "1.0.0",
   "buildNumber": "1"
