@@ -210,6 +210,10 @@ jobs:
         sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Runner.xcodeproj/project.pbxproj
         sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
         
+        # Ensure automatic signing is enabled for all configurations
+        sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
+        sed -i '' 's/"CODE_SIGN_STYLE\[sdk=iphoneos\*\]" = Manual;/"CODE_SIGN_STYLE[sdk=iphoneos*]" = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
+        
         # Also ensure Pods targets use automatic signing
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
           sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Pods/Pods.xcodeproj/project.pbxproj
@@ -218,6 +222,14 @@ jobs:
         
         # Get dependencies
         flutter pub get
+        
+        # Configure iOS project for automatic signing
+        echo "🔧 Configuring iOS project for automatic signing..."
+        cd ios
+        # Update Runner project settings
+        /usr/libexec/PlistBuddy -c "Set :objects:97C146E61CF9000F007C117D:attributes:TargetAttributes:97C146ED1CF9000F007C117D:DevelopmentTeam ${{ secrets.APPLE_TEAM_ID }}" Runner.xcodeproj/project.pbxproj 2>/dev/null || true
+        /usr/libexec/PlistBuddy -c "Set :objects:97C146E61CF9000F007C117D:attributes:TargetAttributes:97C146ED1CF9000F007C117D:ProvisioningStyle Automatic" Runner.xcodeproj/project.pbxproj 2>/dev/null || true
+        cd ..
         
         # Build iOS with automatic signing
         flutter build ios --release --no-codesign
@@ -230,6 +242,7 @@ jobs:
           -archivePath build/ios/Runner.xcarchive \
           DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
           CODE_SIGN_STYLE=Automatic \
+          -allowProvisioningUpdates \
           archive
           
         # Export IPA
