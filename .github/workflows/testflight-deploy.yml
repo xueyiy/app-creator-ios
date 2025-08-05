@@ -3,22 +3,36 @@ name: Deploy to TestFlight
 on:
   workflow_dispatch:
     inputs:
+      project_data:
+        description: 'Project data JSON (from your app)'
+        required: false
+        type: string
+        default: '{}'
       app_name:
-        description: 'App Name'
+        description: 'App name for the build'
         required: true
-        default: 'My Flutter App'
+        type: string
+        default: 'NoCodeApp'
       bundle_id:
-        description: 'Bundle ID'
-        required: true
+        description: 'Bundle ID (used if project_data not provided)'
+        required: false
+        type: string
         default: 'com.visios.nocode'
       version:
-        description: 'App Version'
-        required: true
+        description: 'App Version (used if project_data not provided)'
+        required: false
+        type: string
         default: '1.0.0'
       build_number:
-        description: 'Build Number'
-        required: true
+        description: 'Build Number (used if project_data not provided)'
+        required: false
+        type: string
         default: '1'
+      backend_url:
+        description: 'Backend URL for app generation'
+        required: false
+        type: string
+        default: 'https://your-server.com'
 
 jobs:
   deploy-testflight:
@@ -42,30 +56,60 @@ jobs:
     - name: Create Flutter project structure
       run: |
         echo "🏗️ Creating Flutter project structure..."
+        
+        # Parse project data to extract app info
+        echo "📊 Parsing project configuration..."
+        PROJECT_DATA='${{ github.event.inputs.project_data }}'
+        APP_NAME='${{ github.event.inputs.app_name }}'
+        
+        # Check if we have meaningful project_data (not just empty {})
+        if [ "$PROJECT_DATA" != "{}" ] && [ "$PROJECT_DATA" != "" ]; then
+          echo "📱 Using project_data for app configuration"
+          # Extract deployment info from project data
+          BUNDLE_ID=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.bundleId // "${{ github.event.inputs.bundle_id }}"')
+          VERSION=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.version // "${{ github.event.inputs.version }}"')
+          BUILD_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.buildNumber // "'$(date +%s)'"')
+          USE_PROJECT_DATA=true
+        else
+          echo "📱 Using manual inputs for app configuration"
+          # Use manual inputs
+          BUNDLE_ID='${{ github.event.inputs.bundle_id }}'
+          VERSION='${{ github.event.inputs.version }}'
+          BUILD_NUMBER='${{ github.event.inputs.build_number }}'
+          USE_PROJECT_DATA=false
+          # Create minimal project data for backend call
+          PROJECT_DATA='{"templateId":"default","projectId":"github-action-build","template":{},"deploymentInfo":{"appName":"'$APP_NAME'","bundleId":"'$BUNDLE_ID'","version":"'$VERSION'","buildNumber":"'$BUILD_NUMBER'"}}'
+        fi
+        
+        echo "📱 Final App Configuration:"
+        echo "   Name: $APP_NAME"
+        echo "   Bundle ID: $BUNDLE_ID"
+        echo "   Version: $VERSION"
+        echo "   Build Number: $BUILD_NUMBER"
+        echo "   Using Project Data: $USE_PROJECT_DATA"
+        
+        # Store in environment for later steps
+        echo "BUNDLE_ID=$BUNDLE_ID" >> $GITHUB_ENV
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
+        echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+        echo "PROJECT_DATA=$PROJECT_DATA" >> $GITHUB_ENV
+        
         mkdir -p flutter_project
         cd flutter_project
         
         # Initialize Flutter project
-        flutter create . --org=${{ github.event.inputs.bundle_id }} --project-name=app
+        flutter create . --org=$BUNDLE_ID --project-name=app
         
         # Create the app using our backend service
-        echo "📱 Generating app from template..."
-        curl -X POST "https://your-server.com/api/package-flutter" \
+        echo "📱 Generating app from backend..."
+        curl -X POST "${{ github.event.inputs.backend_url }}/api/package-flutter" \
           -H "Content-Type: application/json" \
-          -d '{
-            "templateId": "default",
-            "projectId": "github-action-build",
-            "template": {},
-            "deploymentInfo": {
-              "appName": "${{ github.event.inputs.app_name }}",
-              "bundleId": "${{ github.event.inputs.bundle_id }}",
-              "version": "${{ github.event.inputs.version }}",
-              "buildNumber": "${{ github.event.inputs.build_number }}"
-            }
-          }' \
+          -d "$PROJECT_DATA" \
           --output app_package.zip
           
         # Extract the generated app
+        echo "📦 Extracting generated Flutter app..."
         unzip -o app_package.zip
         
     - name: Configure iOS signing
@@ -172,9 +216,9 @@ jobs:
       run: |
         if [ ${{ job.status }} == 'success' ]; then
           echo "✅ TestFlight deployment completed successfully!"
-          echo "📱 App: ${{ github.event.inputs.app_name }}"
-          echo "📦 Bundle ID: ${{ github.event.inputs.bundle_id }}"
-          echo "🔢 Version: ${{ github.event.inputs.version }} (${{ github.event.inputs.build_number }})"
+          echo "📱 App: $APP_NAME"
+          echo "📦 Bundle ID: $BUNDLE_ID"
+          echo "🔢 Version: $VERSION ($BUILD_NUMBER)"
         else
           echo "❌ TestFlight deployment failed!"
         fi 
