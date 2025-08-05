@@ -29,10 +29,10 @@ on:
         type: string
         default: '1'
       backend_url:
-        description: 'Backend URL for app generation'
+        description: 'Backend URL for app generation (or use BACKEND_URL secret)'
         required: false
         type: string
-        default: 'https://your-server.com'
+        default: ''
 
 jobs:
   deploy-testflight:
@@ -103,7 +103,20 @@ jobs:
         
         # Create the app using our backend service
         echo "📱 Generating app from backend..."
-        curl -X POST "${{ github.event.inputs.backend_url }}/api/package-flutter" \
+        
+        # Use BACKEND_URL secret if available, otherwise use input
+        BACKEND_URL='${{ secrets.BACKEND_URL }}'
+        if [ -z "$BACKEND_URL" ]; then
+          BACKEND_URL='${{ github.event.inputs.backend_url }}'
+        fi
+        
+        if [ -z "$BACKEND_URL" ]; then
+          echo "❌ No backend URL provided! Please set BACKEND_URL secret or provide backend_url input"
+          exit 1
+        fi
+        
+        echo "🌐 Using backend URL: $BACKEND_URL"
+        curl -X POST "$BACKEND_URL/api/package-flutter" \
           -H "Content-Type: application/json" \
           -d "$PROJECT_DATA" \
           --output app_package.zip
