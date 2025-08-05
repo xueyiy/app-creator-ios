@@ -142,6 +142,8 @@ jobs:
             <true/>
             <key>compileBitcode</key>
             <false/>
+            <key>signingStyle</key>
+            <string>automatic</string>
         </dict>
         </plist>
         EOF
@@ -156,56 +158,78 @@ jobs:
         IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
         IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
       run: |
-        echo "🔐 Setting up iOS code signing..."
+        echo "🔐 Setting up iOS code signing with fallback options..."
         
         # Create private_keys directory for App Store Connect API
         mkdir -p ~/private_keys
         echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8
         
-        # Setup keychain
-        security create-keychain -p "" build.keychain
-        security list-keychains -s build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p "" build.keychain
-        security set-keychain-settings -t 3600 -u build.keychain
+        # Setup certificates as fallback for manual signing if automatic fails
+        if [ -n "$IOS_CERTIFICATE_P12" ] && [ -n "$IOS_CERTIFICATE_PASSWORD" ]; then
+          echo "📋 Setting up manual signing certificates as fallback..."
+          
+          # Setup keychain
+          security create-keychain -p "" build.keychain
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          
+          # Import certificate
+          echo "$IOS_CERTIFICATE_P12" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          
+          # Install provisioning profile
+          if [ -n "$IOS_PROVISIONING_PROFILE" ]; then
+            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+            echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          fi
+          
+          echo "✅ Manual signing certificates configured as fallback"
+        else
+          echo "⚠️  No manual signing certificates provided - will rely on automatic signing only"
+        fi
         
-        # Import certificate
-        echo "$IOS_CERTIFICATE_P12" | base64 --decode > certificate.p12
-        security import certificate.p12 -k build.keychain -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-        security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
-        
-        # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        echo "$IOS_PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+        # Verify automatic signing prerequisites
+        echo "🔍 Verifying automatic signing prerequisites..."
+        echo "   Team ID: $APPLE_TEAM_ID"
+        echo "   Bundle ID will be: com.visios.nocode"
+        echo "   Expected: Xcode will automatically download certificates and profiles"
         
     - name: Build iOS app
       run: |
         cd flutter_project
         echo "🔨 Building Flutter iOS app..."
         
-        # Configure iOS project with team ID
-        echo "🔧 Setting up iOS project configuration..."
+        # Configure iOS project with team ID for automatic signing
+        echo "🔧 Setting up iOS project for automatic code signing..."
         
-        # Update the iOS project with team ID
+        # Set all targets to automatic signing with team ID
+        sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Runner.xcodeproj/project.pbxproj
         sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Runner.xcodeproj/project.pbxproj
-        sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-        sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "noCodeApp_App_Store_Profile";/g' ios/Runner.xcodeproj/project.pbxproj
+        sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+        
+        # Also ensure Pods targets use automatic signing
+        if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+        fi
         
         # Get dependencies
         flutter pub get
         
-        # Build iOS
+        # Build iOS with automatic signing
         flutter build ios --release --no-codesign
         
-        # Create archive
+        # Create archive with automatic signing
         xcodebuild -workspace ios/Runner.xcworkspace \
           -scheme Runner \
           -configuration Release \
           -destination generic/platform=iOS \
           -archivePath build/ios/Runner.xcarchive \
-          CODE_SIGN_IDENTITY="Apple Distribution: SHO Technologies Inc. (GD7UT9D9NY)" \
           DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-          PROVISIONING_PROFILE_SPECIFIER="noCodeApp_App_Store_Profile" \
+          CODE_SIGN_STYLE=Automatic \
           archive
           
         # Export IPA
