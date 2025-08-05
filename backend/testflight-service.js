@@ -436,6 +436,159 @@ class TestFlightService {
     }
   }
 
+  // Package Flutter app source code only (for GitHub Actions)
+  async packageFlutterAppSourceOnly(projectData) {
+    try {
+      console.log('='.repeat(80));
+      console.log('📦 FLUTTER SOURCE PACKAGING STARTED (GitHub Actions)');
+      console.log('='.repeat(80));
+      console.log('📱 Packaging Flutter source code with project data:');
+      console.log(`   🕐 Timestamp: ${new Date().toISOString()}`);
+      console.log(`   📁 Current Directory: ${process.cwd()}`);
+      console.log(`   🔧 Node Version: ${process.version}`);
+      console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+      
+      const { templateId, projectId, template, deploymentInfo } = projectData;
+      
+      console.log('📋 Project Data Summary:');
+      console.log('  - Template ID:', templateId);
+      console.log('  - Project ID:', projectId);
+      console.log('  - Template name:', template?.name);
+      console.log('  - Screens count:', template?.screens?.length || 0);
+      console.log('  - App name:', deploymentInfo?.appName);
+      console.log('  - Bundle ID:', deploymentInfo?.bundleId);
+      console.log('  - Version:', deploymentInfo?.version);
+      console.log('  - Build Number:', deploymentInfo?.buildNumber);
+      
+      // Convert screen data to proper format for Flutter generation
+      const processedScreens = [];
+      if (template?.screens && template.screens.length > 0) {
+        for (const screen of template.screens) {
+          let components = [];
+          
+          // Check multiple possible component sources
+          if (screen.content?.droppedComponents) {
+            components = screen.content.droppedComponents;
+            console.log(`📱 Using droppedComponents for screen ${screen.name}: ${components.length} components`);
+          } else if (screen.components) {
+            components = screen.components;
+            console.log(`📱 Using direct components for screen ${screen.name}: ${components.length} components`);
+          } else {
+            console.log(`⚠️  No components found for screen ${screen.name}`);
+          }
+          
+          processedScreens.push({
+            screenName: screen.name || screen.screenName || 'home',
+            originalName: screen.originalName || screen.name || 'Home',
+            components: components,
+            screenProperties: screen.screenProperties || screen.content?.screenProperties || {},
+            metadata: screen.metadata || {}
+          });
+        }
+      }
+      
+      console.log(`📋 Processed ${processedScreens.length} screens for Flutter generation`);
+      processedScreens.forEach((screen, index) => {
+        console.log(`  Processed Screen ${index + 1}: ${screen.screenName} (${screen.components.length} components)`);
+      });
+      
+      // Create temporary directory for build
+      const buildDir = path.join(__dirname, 'temp', `source_${Date.now()}`);
+      fs.mkdirSync(buildDir, { recursive: true });
+
+      // Create app configuration file
+      const appConfig = {
+        appName: deploymentInfo.appName,
+        bundleId: this.bundleId,
+        screens: processedScreens,
+        projectId,
+        templateId,
+        buildTime: new Date().toISOString(),
+        appIcon: deploymentInfo.appIcon || null,
+        version: deploymentInfo.version || '1.0.0',
+        buildNumber: deploymentInfo.buildNumber || '1'
+      };
+
+      // Write configuration to Flutter assets
+      const configPath = path.join(buildDir, 'app_config.json');
+      fs.writeFileSync(configPath, JSON.stringify(appConfig, null, 2));
+
+      // Create a complete Flutter project structure with all iOS files
+      const flutterStructure = {
+        // Flutter core files
+        'pubspec.yaml': this.generatePubspecYaml(deploymentInfo.appName),
+        'lib/main.dart': this.generateMainDart(appConfig),
+        'lib/screens_data.dart': this.generateScreensDataDart(appConfig),
+        'assets/app_config.json': JSON.stringify(appConfig, null, 2),
+        
+        // iOS project files - Info.plist
+        'ios/Runner/Info.plist': this.generateInfoPlist(deploymentInfo.appName, this.bundleId),
+        
+        // iOS project files - Xcode workspace
+        'ios/Runner.xcworkspace/contents.xcworkspacedata': this.generateXcworkspaceData(),
+        'ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist': this.generateWorkspaceChecks(),
+        
+        // iOS project files - Main Xcode project (improved)
+        'ios/Runner.xcodeproj/project.pbxproj': this.generateProjectPbxprojFixed(deploymentInfo.appName, this.bundleId),
+        'ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme': this.generateXcscheme(),
+        
+        // iOS AppDelegate files
+        'ios/Runner/AppDelegate.swift': this.generateAppDelegate(),
+        'ios/Runner/Runner-Bridging-Header.h': this.generateBridgingHeader(),
+        
+        // iOS assets and configuration (improved with app icon support)
+        'ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json': this.generateAppIconContentsFixed(),
+        'ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json': this.generateLaunchImageContents(),
+        'ios/Runner/Base.lproj/LaunchScreen.storyboard': this.generateLaunchScreen(),
+        'ios/Runner/Base.lproj/Main.storyboard': this.generateMainStoryboard(),
+        
+        // Flutter iOS configuration (fixed paths)
+        'ios/Flutter/AppFrameworkInfo.plist': this.generateAppFrameworkInfo(),
+        'ios/Flutter/Debug.xcconfig': this.generateDebugXcconfig(),
+        'ios/Flutter/Release.xcconfig': this.generateReleaseXcconfig(),
+        'ios/Flutter/Generated.xcconfig': this.generateGeneratedXcconfig(),
+        
+        // Podfile for dependencies
+        'ios/Podfile': this.generatePodfile(),
+        'ios/Podfile.lock': this.generatePodfileLock(),
+        
+        // Flutter build configuration
+        '.flutter-plugins': this.generateFlutterPlugins(),
+        '.flutter-plugins-dependencies': this.generateFlutterPluginsDependencies(),
+        
+        // Android files (for completeness)
+        'android/app/build.gradle': this.generateAndroidBuildGradle(deploymentInfo.appName, this.bundleId),
+        'android/app/src/main/AndroidManifest.xml': this.generateAndroidManifest(deploymentInfo.appName, this.bundleId),
+        'android/app/src/main/kotlin/MainActivity.kt': this.generateMainActivity(),
+        'android/build.gradle': this.generateRootBuildGradle(),
+        'android/gradle.properties': this.generateGradleProperties(),
+        'android/settings.gradle': this.generateSettingsGradle(),
+        
+        // Setup script for proper environment
+        'setup_flutter_env.sh': this.generateFlutterSetupScript()
+      };
+
+      // Write Flutter files
+      for (const [filePath, content] of Object.entries(flutterStructure)) {
+        const fullPath = path.join(buildDir, filePath);
+        fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+        fs.writeFileSync(fullPath, content);
+      }
+
+      console.log('✅ Flutter source code generated successfully');
+      console.log(`📁 Source directory: ${buildDir}`);
+      console.log(`📊 Files generated: ${Object.keys(flutterStructure).length}`);
+      
+      return {
+        buildDir,
+        appConfig
+      };
+    } catch (error) {
+      console.error('Error packaging Flutter source:', error);
+      throw error;
+    }
+  }
+
   // Generate pubspec.yaml for Flutter
   generatePubspecYaml(appName) {
     return `name: ${appName.toLowerCase().replace(/[^a-z0-9]/g, '_')}
