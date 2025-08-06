@@ -143,7 +143,9 @@ jobs:
             <key>compileBitcode</key>
             <false/>
             <key>signingStyle</key>
-            <string>automatic</string>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
         </dict>
         </plist>
         EOF
@@ -247,8 +249,7 @@ jobs:
         sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj  
         sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj
         
-        # Only add manual signing to Runner target's build configurations  
-        # Target Runner's PRODUCT_BUNDLE_IDENTIFIER = com.visios.nocode specifically
+        # Only add manual signing to Runner's bundle identifier
         echo "			CODE_SIGN_STYLE = Manual;" > temp_runner_signing.txt
         echo "			DEVELOPMENT_TEAM = \"$TEAM_ID\";" >> temp_runner_signing.txt  
         echo "			PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";" >> temp_runner_signing.txt
@@ -269,21 +270,24 @@ jobs:
           echo "🔧 Ensuring CocoaPods targets use automatic signing..."
           sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Pods/Pods.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
-          # Remove any provisioning profile specifiers from Pods targets
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+          # COMPLETELY REMOVE any provisioning profile specifiers from Pods targets (not just empty them)
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Pods/Pods.xcodeproj/project.pbxproj
         fi
         
         # Fix Pods/Pods-Runner targets for automatic signing (clear out any code signing that may be left)
         PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
         if [ -f "$PBXPROJ" ]; then
-          echo "🔧 Cleaning up code signing from Pods targets"
+          echo "🔧 Completely removing all code signing from Pods targets"
           
           # Debug: Show Pods signing settings before cleanup
           echo "🔍 Pods signing settings before cleanup:"
           grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
           
+          # Set automatic signing for Pods
           sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' $PBXPROJ
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' $PBXPROJ
+          
+          # COMPLETELY REMOVE all problematic signing settings from Pods (not just empty them)
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' $PBXPROJ  # Remove entire lines with provisioning profiles
           sed -i '' '/DEVELOPMENT_TEAM = .*/d' $PBXPROJ  # Remove DEVELOPMENT_TEAM lines from Pods
           sed -i '' '/CODE_SIGN_IDENTITY = .*/d' $PBXPROJ  # Remove CODE_SIGN_IDENTITY lines from Pods
           
@@ -291,6 +295,37 @@ jobs:
           echo "🔍 Pods signing settings after cleanup:"
           grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
         fi
+        
+        # Final verification before build
+        echo "🔍 Final check: Any provisioning profile in Pods pbxproj?"
+        grep "PROVISIONING_PROFILE_SPECIFIER" ios/Pods/Pods.xcodeproj/project.pbxproj || echo "✅ All provisioning profiles removed from Pods."
+
+        # Comprehensive CocoaPods cleanup and verification
+        PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
+        if [ -f "$PBXPROJ" ]; then
+          echo "🔧 Comprehensive CocoaPods cleanup (removing ALL signing overrides)"
+          
+          # Debug: Show Pods signing settings before cleanup
+          echo "🔍 Pods signing settings before cleanup:"
+          grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
+          
+          # Set automatic signing for all Pods targets
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' $PBXPROJ
+          
+          # COMPLETELY REMOVE all problematic signing settings from Pods (not just empty them)
+          # This prevents plugins like sqflite, shared_preferences from having ANY provisioning profile lines
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' $PBXPROJ  # Remove entire lines with provisioning profiles
+          sed -i '' '/DEVELOPMENT_TEAM = .*/d' $PBXPROJ  # Remove DEVELOPMENT_TEAM lines from Pods
+          sed -i '' '/CODE_SIGN_IDENTITY = .*/d' $PBXPROJ  # Remove CODE_SIGN_IDENTITY lines from Pods
+          
+          # Debug: Show Pods signing settings after cleanup
+          echo "🔍 Pods signing settings after cleanup:"
+          grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
+        fi
+        
+        # Final verification before build
+        echo "🔍 Final check: Any provisioning profile in Pods pbxproj?"
+        grep "PROVISIONING_PROFILE_SPECIFIER" ios/Pods/Pods.xcodeproj/project.pbxproj || echo "✅ All provisioning profiles removed from Pods."
         
         # Build iOS with no code signing first
         flutter build ios --release --no-codesign
