@@ -233,29 +233,22 @@ jobs:
         
         PBXPROJ_RUNNER="ios/Runner.xcodeproj/project.pbxproj"
 
-        # Insert or update signing info inside Runner target block using awk
-        if ! sed -n '/PRODUCT_NAME = Runner/,/};/p' $PBXPROJ_RUNNER | grep -q "CODE_SIGN_STYLE"; then
-          echo "🔧 Inserting signing settings into Runner target..."
-          awk -v team_id="${{ secrets.APPLE_TEAM_ID }}" -v profile="$PROFILE_UUID" '
-          /PRODUCT_NAME = Runner/,/};/ {
-              if ($0 ~ /};/) {
-                  print "    CODE_SIGN_STYLE = Manual;";
-                  print "    DEVELOPMENT_TEAM = \"" team_id "\";";
-                  print "    PROVISIONING_PROFILE_SPECIFIER = \"" profile "\";";
-              }
-          }
-          { print }
-          ' "$PBXPROJ_RUNNER" > tmp && mv tmp "$PBXPROJ_RUNNER"
-        else
-          echo "🔧 Updating existing signing settings in Runner target..."
-          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/' $PBXPROJ_RUNNER
-          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/' $PBXPROJ_RUNNER
-          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";/' $PBXPROJ_RUNNER
-        fi
-        
-        # Debug: Show final Runner target signing settings
+        # Robust Runner signing configuration using perl
+        PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+        TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
+        PROFILE_UUID="$PROFILE_UUID"
+
+        echo "🔧 Configuring Runner target signing with perl..."
+
+        # Remove any previous signing keys inside Runner target (prevent duplicates on rerun)
+        perl -0777 -i -pe 's|(\/\* Runner \*\/ = \{.*?)(\n[ \t]+CODE_SIGN_STYLE = .*?;)?(\n[ \t]+DEVELOPMENT_TEAM = .*?;)?(\n[ \t]+PROVISIONING_PROFILE_SPECIFIER = .*?;)?(.*?\n\};)|$1$5|s' $PBXPROJ
+
+        # Insert signing keys just before end of Runner target
+        perl -0777 -i -pe 's|(\/\* Runner \*\/ = \{.*?)(\n\};)|$1\n    CODE_SIGN_STYLE = Manual;\n    DEVELOPMENT_TEAM = "'"$TEAM_ID"'";\n    PROVISIONING_PROFILE_SPECIFIER = "'"$PROFILE_UUID"'";$2|s' $PBXPROJ
+
+        # Debug: show block
         echo "🔍 Final Runner target signing settings:"
-        sed -n '/PRODUCT_NAME = Runner/,/};/p' $PBXPROJ_RUNNER | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" || echo "No signing settings found in Runner target"
+        awk '/\/\* Runner \*\//,/\};/' $PBXPROJ | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|PRODUCT_NAME = Runner)" || echo "No signing settings found in Runner target"
         
         # Ensure CocoaPods targets use automatic signing (DO NOT specify provisioning profiles)
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
