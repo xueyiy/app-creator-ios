@@ -391,33 +391,33 @@ jobs:
         
         # Update exportOptions.plist to include provisioning profile mapping for manual signing
         echo "🔧 Updating exportOptions.plist with provisioning profile mapping..."
-        cat > ios/exportOptions.plist << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store</string>
-    <key>teamID</key>
-    <string>${{ secrets.APPLE_TEAM_ID }}</string>
-    <key>uploadBitcode</key>
-    <false/>
-    <key>uploadSymbols</key>
-    <true/>
-    <key>compileBitcode</key>
-    <false/>
-    <key>signingStyle</key>
-    <string>manual</string>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.visios.nocode</key>
-        <string>$PROFILE_UUID</string>
-    </dict>
-</dict>
-</plist>
-EOF
+        {
+          echo '<?xml version="1.0" encoding="UTF-8"?>'
+          echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+          echo '<plist version="1.0">'
+          echo '<dict>'
+          echo '    <key>method</key>'
+          echo '    <string>app-store</string>'
+          echo '    <key>teamID</key>'
+          echo "    <string>${{ secrets.APPLE_TEAM_ID }}</string>"
+          echo '    <key>uploadBitcode</key>'
+          echo '    <false/>'
+          echo '    <key>uploadSymbols</key>'
+          echo '    <true/>'
+          echo '    <key>compileBitcode</key>'
+          echo '    <false/>'
+          echo '    <key>signingStyle</key>'
+          echo '    <string>manual</string>'
+          echo '    <key>signingCertificate</key>'
+          echo '    <string>Apple Distribution</string>'
+          echo '    <key>provisioningProfiles</key>'
+          echo '    <dict>'
+          echo '        <key>com.visios.nocode</key>'
+          echo "        <string>$PROFILE_UUID</string>"
+          echo '    </dict>'
+          echo '</dict>'
+          echo '</plist>'
+        } > ios/exportOptions.plist
         
         echo "📋 Updated exportOptions.plist content:"
         cat ios/exportOptions.plist
