@@ -166,6 +166,37 @@ jobs:
         mkdir -p ~/private_keys
         echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8
         
+        # Debug: Verify .p8 file creation and content
+        echo "🔍 P8 FILE DEBUG: Verifying AuthKey file creation..."
+        P8_FILE_PATH="~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8"
+        echo "📁 P8 file path: $P8_FILE_PATH"
+        
+        if [ -f ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8 ]; then
+          echo "✅ P8 file exists"
+          echo "📊 File size: $(wc -c < ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8) bytes"
+          echo "🔐 File permissions: $(ls -la ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          echo "📝 First line: $(head -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          echo "📝 Last line: $(tail -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          echo "📏 Line count: $(wc -l < ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          
+          # Validate .p8 format
+          if head -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8 | grep -q "BEGIN PRIVATE KEY"; then
+            echo "✅ P8 file has correct BEGIN header"
+          else
+            echo "❌ P8 file missing BEGIN PRIVATE KEY header"
+          fi
+          
+          if tail -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8 | grep -q "END PRIVATE KEY"; then
+            echo "✅ P8 file has correct END footer"
+          else
+            echo "❌ P8 file missing END PRIVATE KEY footer"
+          fi
+        else
+          echo "❌ P8 file does not exist!"
+          echo "📁 Directory contents:"
+          ls -la ~/private_keys/ || echo "Directory does not exist"
+        fi
+        
         # Set up manual signing with certificates (more reliable than automatic)
         if [ -n "$IOS_CERTIFICATE_P12" ] && [ -n "$IOS_CERTIFICATE_PASSWORD" ]; then
           echo "📋 Setting up manual signing certificates..."
@@ -435,9 +466,51 @@ jobs:
         cd flutter_project
         echo "📤 Uploading to TestFlight..."
         
+        # Debug: Verify .p8 file before upload
+        echo "🔍 PRE-UPLOAD P8 VERIFICATION..."
+        P8_PATH="~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8"
+        echo "📁 Expected P8 path: $P8_PATH"
+        
+        if [ -f ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8 ]; then
+          echo "✅ P8 file still exists before upload"
+          echo "📊 File size: $(wc -c < ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8) bytes"
+          echo "🔐 File permissions: $(ls -la ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          
+          # Test if altool can read the file
+          echo "🧪 Testing altool access to P8 file..."
+          if [ -r ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8 ]; then
+            echo "✅ P8 file is readable"
+          else
+            echo "❌ P8 file is not readable"
+          fi
+          
+          # Show first and last few lines to verify format
+          echo "📝 P8 file content verification:"
+          echo "   First line: $(head -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          echo "   Last line: $(tail -n 1 ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8)"
+          
+        else
+          echo "❌ P8 file missing before upload!"
+          echo "📁 Current directory contents:"
+          ls -la ~/private_keys/ || echo "private_keys directory missing"
+        fi
+        
+        echo "🔑 App Store Connect credentials:"
+        echo "   Issuer ID: $APP_STORE_CONNECT_ISSUER_ID"
+        echo "   Key ID: $APP_STORE_CONNECT_KEY_ID"
+        echo "   P8 file expected at: ~/private_keys/AuthKey_$APP_STORE_CONNECT_KEY_ID.p8"
+        
         # Find the IPA file
         IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
         echo "📱 IPA Path: $IPA_PATH"
+        
+        if [ -f "$IPA_PATH" ]; then
+          echo "✅ IPA file exists: $(ls -lh "$IPA_PATH")"
+        else
+          echo "❌ IPA file not found!"
+          echo "📁 Build directory contents:"
+          ls -la build/ios/ipa/ || echo "IPA directory missing"
+        fi
         
         # Upload using altool
         xcrun altool --upload-app \
