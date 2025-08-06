@@ -315,6 +315,28 @@ jobs:
           
           print $0
         }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
+
+        # Alternative approach: Add signing settings to build configuration
+        echo "🔧 Adding signing to build configurations directly..."
+        
+        # Find and modify Release configuration for Runner
+        sed -i '' '/\/\* Release \*\/ = {/,/};/ {
+          /CODE_SIGN_STYLE = /d
+          /DEVELOPMENT_TEAM = /d  
+          /PROVISIONING_PROFILE_SPECIFIER = /d
+          /baseConfigurationReference = /a\
+			CODE_SIGN_STYLE = Manual;\
+			DEVELOPMENT_TEAM = "'$TEAM_ID'";\
+			PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";
+        }' "$PBXPROJ"
+        
+        # Debug: Show what build configurations exist
+        echo "🔍 Build configurations in project:"
+        grep -A 10 -B 2 "\/\* Release \*\/ = {" "$PBXPROJ" || echo "No Release configuration found"
+        
+        # Debug: Show final signing settings in all configurations  
+        echo "🔍 All signing settings in project:"
+        grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" "$PBXPROJ" || echo "No signing settings found anywhere"
         
         # Add debugging to see what Runner blocks exist in the project
         echo "🔍 Searching for Runner blocks in project file..."
