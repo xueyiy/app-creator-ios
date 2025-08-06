@@ -214,22 +214,23 @@ jobs:
         cd flutter_project
         echo "🔨 Building Flutter iOS app with manual signing..."
         
-        # Simple approach: Add signing to build configurations
-        echo "🔧 Adding manual signing to build configurations..."
-        
+        # Simple approach: Remove and add signing settings  
         TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
         PROFILE_UUID="$PROFILE_UUID"
         
-        # Remove existing signing settings and add new ones to all buildSettings blocks
-        sed -i '' '/buildSettings = {/,/};/ {
-          /CODE_SIGN_STYLE/d
-          /DEVELOPMENT_TEAM/d
-          /PROVISIONING_PROFILE_SPECIFIER/d
-          /PRODUCT_BUNDLE_IDENTIFIER/a\
-			CODE_SIGN_STYLE = Manual;\
-			DEVELOPMENT_TEAM = "'$TEAM_ID'";\
-			PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";
-        }' ios/Runner.xcodeproj/project.pbxproj
+        echo "🔧 Removing existing signing settings..."
+        sed -i '' '/CODE_SIGN_STYLE/d' ios/Runner.xcodeproj/project.pbxproj
+        sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj  
+        sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj
+        
+        echo "🔧 Adding manual signing settings..."
+        echo "			CODE_SIGN_STYLE = Manual;" >> temp_signing.txt
+        echo "			DEVELOPMENT_TEAM = \"$TEAM_ID\";" >> temp_signing.txt  
+        echo "			PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";" >> temp_signing.txt
+        
+        # Insert signing settings after PRODUCT_BUNDLE_IDENTIFIER
+        sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER/r temp_signing.txt' ios/Runner.xcodeproj/project.pbxproj
+        rm temp_signing.txt
         
         echo "🔍 Signing settings added to project:"
         grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" ios/Runner.xcodeproj/project.pbxproj || echo "No signing settings found"
