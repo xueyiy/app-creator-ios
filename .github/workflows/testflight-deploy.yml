@@ -231,6 +231,27 @@ jobs:
         echo "🔍 Runner target signing settings after modification:"
         sed -n '/PRODUCT_NAME = Runner/,/};/p' ios/Runner.xcodeproj/project.pbxproj | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" || echo "No signing settings found in Runner target"
         
+        PBXPROJ_RUNNER="ios/Runner.xcodeproj/project.pbxproj"
+
+        # Insert or update signing info inside Runner target block
+        if ! sed -n '/PRODUCT_NAME = Runner/,/};/p' $PBXPROJ_RUNNER | grep -q "CODE_SIGN_STYLE"; then
+          echo "🔧 Inserting signing settings into Runner target..."
+          sed -i '' '/PRODUCT_NAME = Runner/,/};/ { /};/ i\
+            CODE_SIGN_STYLE = Manual;\
+            DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";\
+            PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";
+          }' $PBXPROJ_RUNNER
+        else
+          echo "🔧 Updating existing signing settings in Runner target..."
+          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/' $PBXPROJ_RUNNER
+          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/' $PBXPROJ_RUNNER
+          sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";/' $PBXPROJ_RUNNER
+        fi
+        
+        # Debug: Show final Runner target signing settings
+        echo "🔍 Final Runner target signing settings:"
+        sed -n '/PRODUCT_NAME = Runner/,/};/p' $PBXPROJ_RUNNER | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" || echo "No signing settings found in Runner target"
+        
         # Ensure CocoaPods targets use automatic signing (DO NOT specify provisioning profiles)
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
           echo "🔧 Ensuring CocoaPods targets use automatic signing..."
