@@ -250,24 +250,48 @@ jobs:
         echo "🔍 Runner block after removing old lines:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Add the signing lines using awk for robust Xcode project handling
-        echo "🔧 Adding signing lines with awk..."
+        # Add the signing lines using more flexible awk pattern
+        echo "🔧 Adding signing lines with flexible awk..."
         awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
         BEGIN{inside=0}
         {
-          if ($0 ~ /^		97C146ED1CF9000F007C117D \/\* Runner \*\/ = \{$/) {inside=1}
-          if (inside && $0 ~ /CODE_SIGN_STYLE = /) {next}
-          if (inside && $0 ~ /DEVELOPMENT_TEAM = /) {next}
-          if (inside && $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /) {next}
+          # More flexible pattern - look for any line with /* Runner */ = {
+          if ($0 ~ /\/\* Runner \*\/ = \{/) {
+            inside=1
+            print "🔍 Found Runner block start: " $0 > "/dev/stderr"
+          }
+          # Remove existing signing settings when inside Runner block
+          if (inside && $0 ~ /CODE_SIGN_STYLE = /) {
+            print "🔍 Removing existing CODE_SIGN_STYLE" > "/dev/stderr"
+            next
+          }
+          if (inside && $0 ~ /DEVELOPMENT_TEAM = /) {
+            print "🔍 Removing existing DEVELOPMENT_TEAM" > "/dev/stderr"
+            next
+          }
+          if (inside && $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /) {
+            print "🔍 Removing existing PROVISIONING_PROFILE_SPECIFIER" > "/dev/stderr"
+            next
+          }
           print $0
-          if (inside && $0 ~ /^\t\t\};$/ && inside) {
-            print "			CODE_SIGN_STYLE = Manual;"
-            print "			DEVELOPMENT_TEAM = \"" team_id "\";"
-            print "			PROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
+          # Look for closing }; when inside Runner block
+          if (inside && $0 ~ /^\t*\};$/) {
+            print "🔍 Found Runner block end, adding signing settings" > "/dev/stderr"
+            print "\t\t\tCODE_SIGN_STYLE = Manual;"
+            print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
+            print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
             inside=0
           }
         }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
 
+        # Add debugging to see what Runner blocks exist in the project
+        echo "🔍 Searching for Runner blocks in project file..."
+        grep -n "Runner" "$PBXPROJ" | head -10 || echo "No Runner found"
+        
+        # Show lines around /* Runner */ patterns
+        echo "🔍 Lines containing /* Runner */ pattern:"
+        grep -A 2 -B 2 "/\* Runner \*/" "$PBXPROJ" || echo "No /* Runner */ pattern found"
+        
         # Debug: Show final Runner block
         echo "🔍 Final Runner block after ed modification:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
