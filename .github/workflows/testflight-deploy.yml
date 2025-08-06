@@ -250,13 +250,16 @@ jobs:
         echo "🔍 Runner block after removing old lines:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Add the signing lines before the block closes using sed
+        # Add the signing lines before the block closes using a simpler approach
         echo "🔧 Adding signing lines with sed..."
-        sed -i '' '/\/\* Runner \*\//,/};/ { /};/ i\
-    CODE_SIGN_STYLE = Manual;\
-    DEVELOPMENT_TEAM = "'"$TEAM_ID"'";\
-    PROVISIONING_PROFILE_SPECIFIER = "'"$PROFILE_UUID"'";\
-' } "$PBXPROJ"
+        # Create a temporary file with the signing settings
+        cat > signing_settings.txt << EOF
+    CODE_SIGN_STYLE = Manual;
+    DEVELOPMENT_TEAM = "$TEAM_ID";
+    PROVISIONING_PROFILE_SPECIFIER = "$PROFILE_UUID";
+EOF
+        # Insert the signing settings before the closing };
+        sed -i '' '/\/\* Runner \*\//,/};/ { /};/ r signing_settings.txt' "$PBXPROJ"
 
         # Debug: Show final Runner block
         echo "🔍 Final Runner block after ed modification:"
