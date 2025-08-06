@@ -22,7 +22,7 @@ on:
         description: 'App Version (used if project_data not provided)'
         required: false
         type: string
-        default: '1.0.0'
+        default: '1.0.1'
       build_number:
         description: 'Build Number (used if project_data not provided)'
         required: false
