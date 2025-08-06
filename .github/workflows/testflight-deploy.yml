@@ -240,22 +240,29 @@ jobs:
         TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
         PROFILE_UUID="$PROFILE_UUID"
         
-        echo "🔧 Removing existing signing settings..."
+        echo "🔧 Configuring Runner target signing (manual) and Pods targets (automatic)..."
+        
+        # First, remove ALL existing signing settings from project
         sed -i '' '/CODE_SIGN_STYLE/d' ios/Runner.xcodeproj/project.pbxproj
         sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj  
         sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj
         
-        echo "🔧 Adding manual signing settings..."
-        echo "			CODE_SIGN_STYLE = Manual;" >> temp_signing.txt
-        echo "			DEVELOPMENT_TEAM = \"$TEAM_ID\";" >> temp_signing.txt  
-        echo "			PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";" >> temp_signing.txt
+        # Only add manual signing to Runner target's build configurations  
+        # Target Runner's PRODUCT_BUNDLE_IDENTIFIER = com.visios.nocode specifically
+        echo "			CODE_SIGN_STYLE = Manual;" > temp_runner_signing.txt
+        echo "			DEVELOPMENT_TEAM = \"$TEAM_ID\";" >> temp_runner_signing.txt  
+        echo "			PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";" >> temp_runner_signing.txt
         
-        # Insert signing settings after PRODUCT_BUNDLE_IDENTIFIER
-        sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER/r temp_signing.txt' ios/Runner.xcodeproj/project.pbxproj
-        rm temp_signing.txt
+        # Insert signing settings only after Runner's bundle identifier
+        sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER = com\.visios\.nocode;/r temp_runner_signing.txt' ios/Runner.xcodeproj/project.pbxproj
+        rm temp_runner_signing.txt
         
         echo "🔍 Signing settings added to project:"
         grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" ios/Runner.xcodeproj/project.pbxproj || echo "No signing settings found"
+        
+        # Get dependencies first to regenerate Pods with clean settings
+        echo "📦 Running flutter pub get to regenerate Pods..."
+        flutter pub get
         
         # Ensure CocoaPods targets use automatic signing (DO NOT specify provisioning profiles)
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
@@ -284,9 +291,6 @@ jobs:
           echo "🔍 Pods signing settings after cleanup:"
           grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
         fi
-        
-        # Get dependencies
-        flutter pub get
         
         # Build iOS with no code signing first
         flutter build ios --release --no-codesign
