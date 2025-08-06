@@ -250,28 +250,44 @@ jobs:
         echo "🔍 Runner block after removing old lines:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Add signing settings using simpler awk approach
-        echo "🔧 Adding signing lines to PBXNativeTarget only..."
+        # Add signing settings using safe awk approach without getline
+        echo "🔧 Adding signing lines to PBXNativeTarget safely..."
         awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
-        BEGIN{inside_target=0; found_target=0}
+        BEGIN{
+          inside_target=0
+          found_runner=0
+          target_depth=0
+        }
         {
-          # Look for the PBXNativeTarget Runner block
+          # Look for /* Runner */ = { line
           if ($0 ~ /\/\* Runner \*\/ = \{/) {
-            # Check if the next line contains PBXNativeTarget
-            getline next_line
-            if (next_line ~ /isa = PBXNativeTarget/) {
-              inside_target=1
-              found_target=1
-              print "🔍 Found PBXNativeTarget Runner block" > "/dev/stderr"
-              print $0  # Print the Runner = { line
-              print next_line  # Print the isa = PBXNativeTarget line
-              next
-            } else {
-              print "🔍 Skipping PBXGroup Runner block" > "/dev/stderr"
-              print $0
-              print next_line
-              next
-            }
+            found_runner=1
+            target_depth=0
+            print "🔍 Found Runner block start" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Check if this Runner block is PBXNativeTarget
+          if (found_runner && $0 ~ /isa = PBXNativeTarget/) {
+            inside_target=1
+            print "🔍 This is PBXNativeTarget - enabling signing injection" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Reset if this Runner block is not PBXNativeTarget
+          if (found_runner && $0 ~ /isa = PBXGroup/) {
+            found_runner=0
+            print "🔍 This is PBXGroup - skipping signing injection" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Track nesting depth in target block
+          if (inside_target) {
+            if ($0 ~ /\{/) target_depth++
+            if ($0 ~ /\}/) target_depth--
           }
           
           # Remove existing signing settings when inside target block
@@ -280,15 +296,21 @@ jobs:
             next
           }
           
-          # Look for closing }; when inside target block
-          if (inside_target && $0 ~ /^\t*\};$/) {
+          # Look for closing }; of the target block (depth 0)
+          if (inside_target && target_depth == 0 && $0 ~ /^\t*\};$/) {
             print "🔍 Found PBXNativeTarget end, adding signing settings" > "/dev/stderr"
             print "\t\t\tCODE_SIGN_STYLE = Manual;"
             print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
             print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
-            print $0  # Print the closing };
+            print $0
             inside_target=0
+            found_runner=0
             next
+          }
+          
+          # Reset found_runner after processing isa line
+          if (found_runner && !inside_target && $0 !~ /isa = /) {
+            found_runner=0
           }
           
           print $0
