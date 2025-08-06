@@ -365,7 +365,63 @@ jobs:
           archive
           
         # Export IPA
-        echo "📤 Exporting IPA..."
+        echo "�� Exporting IPA..."
+        
+        # Debug: Verify provisioning profile and export options before export
+        echo "🔍 PRE-EXPORT DEBUG: Verifying provisioning profile availability..."
+        echo "📋 Available provisioning profiles:"
+        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No provisioning profiles directory found"
+        
+        echo "📋 Provisioning profile details:"
+        if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision ]; then
+          security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision | plutil -p - | head -20
+          echo "📱 Profile UUID: $PROFILE_UUID"
+          echo "📱 Bundle ID in profile:"
+          security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision | plutil -extract Entitlements.application-identifier xml1 -o - - | xmllint --xpath "//string/text()" - || echo "Could not extract bundle ID"
+        else
+          echo "❌ Provisioning profile file not found!"
+        fi
+        
+        echo "📋 Current exportOptions.plist content:"
+        cat ios/exportOptions.plist
+        
+        echo "📋 Archive contents:"
+        ls -la build/ios/Runner.xcarchive/
+        ls -la build/ios/Runner.xcarchive/Products/Applications/ || echo "No Applications directory"
+        
+        # Update exportOptions.plist to include provisioning profile mapping for manual signing
+        echo "🔧 Updating exportOptions.plist with provisioning profile mapping..."
+        cat > ios/exportOptions.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+                <key>com.visios.nocode</key>
+                <string>$PROFILE_UUID</string>
+            </dict>
+        </dict>
+        </plist>
+EOF
+        
+        echo "📋 Updated exportOptions.plist content:"
+        cat ios/exportOptions.plist
+        
         xcodebuild -exportArchive \
           -archivePath build/ios/Runner.xcarchive \
           -exportPath build/ios/ipa \
