@@ -231,22 +231,41 @@ jobs:
         echo "🔍 Runner target signing settings after modification:"
         sed -n '/PRODUCT_NAME = Runner/,/};/p' ios/Runner.xcodeproj/project.pbxproj | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" || echo "No signing settings found in Runner target"
         
-        PBXPROJ_RUNNER="ios/Runner.xcodeproj/project.pbxproj"
-
-        # Robust Runner signing configuration using perl
-        PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+        # Robust Runner signing configuration using ed
         TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
         PROFILE_UUID="$PROFILE_UUID"
+        PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
 
-        echo "🔧 Configuring Runner target signing with perl..."
+        echo "🔧 Configuring Runner target signing with ed..."
 
-        # Remove any previous signing keys inside Runner target (prevent duplicates on rerun)
-        perl -0777 -i -pe 's|(\/\* Runner \*\/ = \{.*?)(\n[ \t]+CODE_SIGN_STYLE = .*?;)?(\n[ \t]+DEVELOPMENT_TEAM = .*?;)?(\n[ \t]+PROVISIONING_PROFILE_SPECIFIER = .*?;)?(.*?\n\};)|$1$5|s' $PBXPROJ
+        # Debug: Show current Runner block before modification
+        echo "🔍 Current Runner block before modification:"
+        awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Insert signing keys just before end of Runner target
-        perl -0777 -i -pe 's|(\/\* Runner \*\/ = \{.*?)(\n\};)|$1\n    CODE_SIGN_STYLE = Manual;\n    DEVELOPMENT_TEAM = "'"$TEAM_ID"'";\n    PROVISIONING_PROFILE_SPECIFIER = "'"$PROFILE_UUID"'";$2|s' $PBXPROJ
+        # Remove old lines (optional)
+        echo "🧹 Removing old signing lines..."
+        sed -i '' '/\/\* Runner \*\//,/};/ { /CODE_SIGN_STYLE = /d; /DEVELOPMENT_TEAM = /d; /PROVISIONING_PROFILE_SPECIFIER = /d; }' "$PBXPROJ"
 
-        # Debug: show block
+        # Debug: Show Runner block after removing old lines
+        echo "🔍 Runner block after removing old lines:"
+        awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
+
+        # Add the signing lines before the block closes
+        echo "🔧 Adding signing lines with ed..."
+        ed -s "$PBXPROJ" <<EOF
+/\/\* Runner \*\//,/};/s/\(.*\)\(};\)/\1    CODE_SIGN_STYLE = Manual;\
+    DEVELOPMENT_TEAM = "$TEAM_ID";\
+    PROVISIONING_PROFILE_SPECIFIER = "$PROFILE_UUID";\
+\2/
+w
+q
+EOF
+
+        # Debug: Show final Runner block
+        echo "🔍 Final Runner block after ed modification:"
+        awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
+
+        # Debug: Show specific signing settings
         echo "🔍 Final Runner target signing settings:"
         awk '/\/\* Runner \*\//,/\};/' $PBXPROJ | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|PRODUCT_NAME = Runner)" || echo "No signing settings found in Runner target"
         
