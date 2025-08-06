@@ -197,6 +197,28 @@ jobs:
           echo "CERT_NAME=$CERT_NAME" >> $GITHUB_ENV
           
           echo "✅ Manual signing certificates configured successfully"
+
+          # Debug: Show all available certificates and their details
+          echo "🔍 Debugging certificate installation..."
+          echo "📋 All certificates in keychain:"
+          security find-identity -v -p codesigning build.keychain || echo "No certificates found"
+          
+          echo "📋 Certificate details:"
+          security dump-keychain build.keychain | grep -A 5 -B 5 "Apple Distribution\|Apple Development\|iPhone Distribution\|iPhone Development" || echo "No Apple certificates found"
+          
+          echo "📋 Looking for Distribution certificates specifically:"
+          security find-identity -v -p codesigning build.keychain | grep -i "distribution" || echo "No Distribution certificates found"
+          security find-identity -v -p codesigning build.keychain | grep -i "development" || echo "No Development certificates found"
+          
+          # Try to get Distribution certificate specifically (for TestFlight)
+          DIST_CERT=$(security find-identity -v -p codesigning build.keychain | grep -i "distribution" | head -n 1 | grep -o '"[^"]*"' | sed 's/"//g')
+          if [ -n "$DIST_CERT" ]; then
+            echo "🎯 Found Distribution certificate: $DIST_CERT"
+            echo "CERT_NAME=$DIST_CERT" >> $GITHUB_ENV
+            CERT_NAME="$DIST_CERT"
+          else
+            echo "⚠️ No Distribution certificate found, using first available: $CERT_NAME"
+          fi
         else
           echo "❌ No manual signing certificates provided!"
           exit 1
@@ -271,11 +293,27 @@ jobs:
         
         # Create archive with manual signing ONLY for Runner target
         echo "📦 Creating archive with manual signing for Runner target only..."
+        
+        # Debug: Show current signing configuration before build
+        echo "🔍 Pre-build signing verification..."
+        echo "📋 Available certificates in keychain:"
+        security find-identity -v -p codesigning build.keychain
+        echo "📋 Runner project signing settings:"
+        grep -A 3 -B 3 -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" ios/Runner.xcodeproj/project.pbxproj || echo "No signing settings found"
+        echo "📋 Current environment variables:"
+        echo "   CERT_NAME: $CERT_NAME"
+        echo "   PROFILE_UUID: $PROFILE_UUID"
+        echo "   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}"
+        
         xcodebuild -workspace ios/Runner.xcworkspace \
           -scheme Runner \
           -configuration Release \
           -destination generic/platform=iOS \
           -archivePath build/ios/Runner.xcarchive \
+          CODE_SIGN_STYLE=Manual \
+          DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+          CODE_SIGN_IDENTITY="$CERT_NAME" \
+          PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
           archive
           
         # Export IPA
