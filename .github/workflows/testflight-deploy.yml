@@ -329,6 +329,111 @@ jobs:
 			DEVELOPMENT_TEAM = "'$TEAM_ID'";\
 			PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";
         }' "$PBXPROJ"
+
+        # Fix approach: Add signing settings properly to Runner build configurations
+        echo "🔧 Adding signing to Runner build configurations properly..."
+        
+        # Target Runner's Release configuration specifically
+        awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
+        BEGIN{
+          in_runner_release=0
+          in_build_settings=0
+        }
+        {
+          # Look for Runner Release configuration
+          if ($0 ~ /97C147061CF9000F007C117D \/\* Release \*\/ = \{/) {
+            in_runner_release=1
+            print "🔍 Found Runner Release configuration" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Look for buildSettings block within Runner Release config
+          if (in_runner_release && $0 ~ /buildSettings = \{/) {
+            in_build_settings=1
+            print "🔍 Found buildSettings block in Runner Release" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Remove existing signing settings from buildSettings
+          if (in_build_settings && ($0 ~ /CODE_SIGN_STYLE = / || $0 ~ /DEVELOPMENT_TEAM = / || $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /)) {
+            print "🔍 Removing existing signing setting from buildSettings: " $0 > "/dev/stderr"
+            next
+          }
+          
+          # Add signing settings before closing buildSettings
+          if (in_build_settings && $0 ~ /^\t*\};$/) {
+            print "🔍 Adding signing settings to buildSettings" > "/dev/stderr"
+            print "\t\t\tCODE_SIGN_STYLE = Manual;"
+            print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
+            print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
+            print $0
+            in_build_settings=0
+            next
+          }
+          
+          # End of Runner Release config
+          if (in_runner_release && !in_build_settings && $0 ~ /^\t*\};$/) {
+            in_runner_release=0
+            print "🔍 End of Runner Release configuration" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          print $0
+        }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
+        
+        # Also target Runner's Debug configuration
+        awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
+        BEGIN{
+          in_runner_debug=0
+          in_build_settings=0
+        }
+        {
+          # Look for Runner Debug configuration  
+          if ($0 ~ /97C147051CF9000F007C117D \/\* Debug \*\/ = \{/) {
+            in_runner_debug=1
+            print "🔍 Found Runner Debug configuration" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Look for buildSettings block within Runner Debug config
+          if (in_runner_debug && $0 ~ /buildSettings = \{/) {
+            in_build_settings=1
+            print "🔍 Found buildSettings block in Runner Debug" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          # Remove existing signing settings from buildSettings
+          if (in_build_settings && ($0 ~ /CODE_SIGN_STYLE = / || $0 ~ /DEVELOPMENT_TEAM = / || $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /)) {
+            print "🔍 Removing existing signing setting from Debug buildSettings: " $0 > "/dev/stderr"
+            next
+          }
+          
+          # Add signing settings before closing buildSettings
+          if (in_build_settings && $0 ~ /^\t*\};$/) {
+            print "🔍 Adding signing settings to Debug buildSettings" > "/dev/stderr"
+            print "\t\t\tCODE_SIGN_STYLE = Manual;"
+            print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
+            print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
+            print $0
+            in_build_settings=0
+            next
+          }
+          
+          # End of Runner Debug config
+          if (in_runner_debug && !in_build_settings && $0 ~ /^\t*\};$/) {
+            in_runner_debug=0
+            print "🔍 End of Runner Debug configuration" > "/dev/stderr"
+            print $0
+            next
+          }
+          
+          print $0
+        }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
         
         # Debug: Show what build configurations exist
         echo "🔍 Build configurations in project:"
