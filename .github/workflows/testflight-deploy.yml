@@ -250,37 +250,62 @@ jobs:
         echo "🔍 Runner block after removing old lines:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Add the signing lines using more flexible awk pattern
-        echo "🔧 Adding signing lines with flexible awk..."
+        # Add the signing lines using awk targeting only PBXNativeTarget
+        echo "🔧 Adding signing lines to PBXNativeTarget only..."
         awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
-        BEGIN{inside=0}
+        BEGIN{inside_target=0}
         {
-          # More flexible pattern - look for any line with /* Runner */ = {
+          # Target only the PBXNativeTarget Runner block, not PBXGroup
+          if ($0 ~ /\/\* Runner \*\/ = \{/ && next_line_seen) {
+            if (prev_line ~ /isa = PBXNativeTarget/) {
+              inside_target=1
+              print "🔍 Found PBXNativeTarget Runner block: " $0 > "/dev/stderr"
+            } else {
+              print "🔍 Skipping PBXGroup Runner block: " $0 > "/dev/stderr"
+            }
+          }
+          
+          # Store the next line to check for isa = PBXNativeTarget
           if ($0 ~ /\/\* Runner \*\/ = \{/) {
-            inside=1
-            print "🔍 Found Runner block start: " $0 > "/dev/stderr"
+            # Read next line to check if it contains PBXNativeTarget
+            getline next_line
+            if (next_line ~ /isa = PBXNativeTarget/) {
+              inside_target=1
+              print "🔍 Found PBXNativeTarget Runner block" > "/dev/stderr"
+              print $0  # Print the Runner = { line
+              print next_line  # Print the isa = PBXNativeTarget line
+              continue
+            } else {
+              print "🔍 Skipping non-target Runner block" > "/dev/stderr"
+              print $0
+              print next_line
+              continue
+            }
           }
-          # Remove existing signing settings when inside Runner block
-          if (inside && $0 ~ /CODE_SIGN_STYLE = /) {
-            print "🔍 Removing existing CODE_SIGN_STYLE" > "/dev/stderr"
+          
+          # Remove existing signing settings when inside target block
+          if (inside_target && $0 ~ /CODE_SIGN_STYLE = /) {
+            print "🔍 Removing existing CODE_SIGN_STYLE from target" > "/dev/stderr"
             next
           }
-          if (inside && $0 ~ /DEVELOPMENT_TEAM = /) {
-            print "🔍 Removing existing DEVELOPMENT_TEAM" > "/dev/stderr"
+          if (inside_target && $0 ~ /DEVELOPMENT_TEAM = /) {
+            print "🔍 Removing existing DEVELOPMENT_TEAM from target" > "/dev/stderr"
             next
           }
-          if (inside && $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /) {
-            print "🔍 Removing existing PROVISIONING_PROFILE_SPECIFIER" > "/dev/stderr"
+          if (inside_target && $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /) {
+            print "🔍 Removing existing PROVISIONING_PROFILE_SPECIFIER from target" > "/dev/stderr"
             next
           }
+          
           print $0
-          # Look for closing }; when inside Runner block
-          if (inside && $0 ~ /^\t*\};$/) {
-            print "🔍 Found Runner block end, adding signing settings" > "/dev/stderr"
+          
+          # Look for closing }; when inside target block
+          if (inside_target && $0 ~ /^\t*\};$/) {
+            print "🔍 Found PBXNativeTarget end, adding signing settings" > "/dev/stderr"
             print "\t\t\tCODE_SIGN_STYLE = Manual;"
             print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
             print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
-            inside=0
+            inside_target=0
           }
         }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
 
