@@ -143,14 +143,7 @@ jobs:
             <key>compileBitcode</key>
             <false/>
             <key>signingStyle</key>
-            <string>manual</string>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
-            <key>provisioningProfiles</key>
-            <dict>
-                <key>com.visios.nocode</key>
-                <string>noCodeApp App Store Profile</string>
-            </dict>
+            <string>automatic</string>
         </dict>
         </plist>
         EOF
@@ -221,22 +214,22 @@ jobs:
         cd flutter_project
         echo "🔨 Building Flutter iOS app with manual signing..."
         
-        # Configure iOS project for manual signing
+        # Configure iOS project for manual signing (ONLY for main target)
         echo "🔧 Configuring iOS project for manual code signing..."
         
-        # Set all targets to manual signing with specific certificate and profile
-        sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-        sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Runner.xcodeproj/project.pbxproj
-        sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";/g' ios/Runner.xcodeproj/project.pbxproj
+        # Set ONLY the main Runner target to manual signing with specific certificate and profile
+        # DO NOT modify CocoaPods targets - they should use automatic signing
+        sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' ios/Runner.xcodeproj/project.pbxproj
+        sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/' ios/Runner.xcodeproj/project.pbxproj
+        sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";/' ios/Runner.xcodeproj/project.pbxproj
         
-        # Ensure manual signing is enabled for all configurations
-        sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-        sed -i '' 's/"CODE_SIGN_STYLE\[sdk=iphoneos\*\]" = Automatic;/"CODE_SIGN_STYLE[sdk=iphoneos*]" = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-        
-        # Also configure Pods targets for manual signing
+        # Ensure CocoaPods targets use automatic signing (DO NOT specify provisioning profiles)
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+          echo "🔧 Ensuring CocoaPods targets use automatic signing..."
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' ios/Pods/Pods.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+          # Remove any provisioning profile specifiers from Pods targets
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
         fi
         
         # Get dependencies
@@ -245,17 +238,14 @@ jobs:
         # Build iOS with no code signing first
         flutter build ios --release --no-codesign
         
-        # Create archive with manual signing
-        echo "📦 Creating archive with manual signing..."
+        # Create archive with manual signing ONLY for Runner target
+        echo "📦 Creating archive with manual signing for Runner target only..."
         xcodebuild -workspace ios/Runner.xcworkspace \
           -scheme Runner \
           -configuration Release \
           -destination generic/platform=iOS \
           -archivePath build/ios/Runner.xcarchive \
-          CODE_SIGN_STYLE=Manual \
           DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-          CODE_SIGN_IDENTITY="$CERT_NAME" \
-          PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
           archive
           
         # Export IPA
