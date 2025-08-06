@@ -233,14 +233,19 @@ jobs:
         
         PBXPROJ_RUNNER="ios/Runner.xcodeproj/project.pbxproj"
 
-        # Insert or update signing info inside Runner target block
+        # Insert or update signing info inside Runner target block using awk
         if ! sed -n '/PRODUCT_NAME = Runner/,/};/p' $PBXPROJ_RUNNER | grep -q "CODE_SIGN_STYLE"; then
           echo "🔧 Inserting signing settings into Runner target..."
-          sed -i '' '/PRODUCT_NAME = Runner/,/};/ { /};/ i\
-            CODE_SIGN_STYLE = Manual;\
-            DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";\
-            PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";
-          }' $PBXPROJ_RUNNER
+          awk -v team_id="${{ secrets.APPLE_TEAM_ID }}" -v profile="$PROFILE_UUID" '
+          /PRODUCT_NAME = Runner/,/};/ {
+              if ($0 ~ /};/) {
+                  print "    CODE_SIGN_STYLE = Manual;";
+                  print "    DEVELOPMENT_TEAM = \"" team_id "\";";
+                  print "    PROVISIONING_PROFILE_SPECIFIER = \"" profile "\";";
+              }
+          }
+          { print }
+          ' "$PBXPROJ_RUNNER" > tmp && mv tmp "$PBXPROJ_RUNNER"
         else
           echo "🔧 Updating existing signing settings in Runner target..."
           sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/' $PBXPROJ_RUNNER
