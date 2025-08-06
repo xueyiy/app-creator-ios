@@ -250,54 +250,35 @@ jobs:
         echo "🔍 Runner block after removing old lines:"
         awk '/\/\* Runner \*\//,/\};/' "$PBXPROJ" || echo "No Runner block found"
 
-        # Add the signing lines using awk targeting only PBXNativeTarget
+        # Add signing settings using simpler awk approach
         echo "🔧 Adding signing lines to PBXNativeTarget only..."
         awk -v team_id="$TEAM_ID" -v profile="$PROFILE_UUID" '
-        BEGIN{inside_target=0}
+        BEGIN{inside_target=0; found_target=0}
         {
-          # Target only the PBXNativeTarget Runner block, not PBXGroup
-          if ($0 ~ /\/\* Runner \*\/ = \{/ && next_line_seen) {
-            if (prev_line ~ /isa = PBXNativeTarget/) {
-              inside_target=1
-              print "🔍 Found PBXNativeTarget Runner block: " $0 > "/dev/stderr"
-            } else {
-              print "🔍 Skipping PBXGroup Runner block: " $0 > "/dev/stderr"
-            }
-          }
-          
-          # Store the next line to check for isa = PBXNativeTarget
+          # Look for the PBXNativeTarget Runner block
           if ($0 ~ /\/\* Runner \*\/ = \{/) {
-            # Read next line to check if it contains PBXNativeTarget
+            # Check if the next line contains PBXNativeTarget
             getline next_line
             if (next_line ~ /isa = PBXNativeTarget/) {
               inside_target=1
+              found_target=1
               print "🔍 Found PBXNativeTarget Runner block" > "/dev/stderr"
               print $0  # Print the Runner = { line
               print next_line  # Print the isa = PBXNativeTarget line
-              continue
+              next
             } else {
-              print "🔍 Skipping non-target Runner block" > "/dev/stderr"
+              print "🔍 Skipping PBXGroup Runner block" > "/dev/stderr"
               print $0
               print next_line
-              continue
+              next
             }
           }
           
           # Remove existing signing settings when inside target block
-          if (inside_target && $0 ~ /CODE_SIGN_STYLE = /) {
-            print "🔍 Removing existing CODE_SIGN_STYLE from target" > "/dev/stderr"
+          if (inside_target && ($0 ~ /CODE_SIGN_STYLE = / || $0 ~ /DEVELOPMENT_TEAM = / || $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /)) {
+            print "🔍 Removing existing signing setting: " $0 > "/dev/stderr"
             next
           }
-          if (inside_target && $0 ~ /DEVELOPMENT_TEAM = /) {
-            print "🔍 Removing existing DEVELOPMENT_TEAM from target" > "/dev/stderr"
-            next
-          }
-          if (inside_target && $0 ~ /PROVISIONING_PROFILE_SPECIFIER = /) {
-            print "🔍 Removing existing PROVISIONING_PROFILE_SPECIFIER from target" > "/dev/stderr"
-            next
-          }
-          
-          print $0
           
           # Look for closing }; when inside target block
           if (inside_target && $0 ~ /^\t*\};$/) {
@@ -305,10 +286,14 @@ jobs:
             print "\t\t\tCODE_SIGN_STYLE = Manual;"
             print "\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
             print "\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" profile "\";"
+            print $0  # Print the closing };
             inside_target=0
+            next
           }
+          
+          print $0
         }' "$PBXPROJ" > tmp && mv tmp "$PBXPROJ"
-
+        
         # Add debugging to see what Runner blocks exist in the project
         echo "🔍 Searching for Runner blocks in project file..."
         grep -n "Runner" "$PBXPROJ" | head -10 || echo "No Runner found"
