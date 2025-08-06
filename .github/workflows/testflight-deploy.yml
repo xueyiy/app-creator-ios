@@ -217,11 +217,19 @@ jobs:
         # Configure iOS project for manual signing (ONLY for main target)
         echo "🔧 Configuring iOS project for manual code signing..."
         
+        # Debug: Show current signing settings
+        echo "🔍 Current signing settings in Runner.xcodeproj:"
+        grep -A 5 -B 5 "CODE_SIGN_STYLE" ios/Runner.xcodeproj/project.pbxproj || echo "No CODE_SIGN_STYLE found"
+        
         # Set ONLY the main Runner target to manual signing with specific certificate and profile
         # DO NOT modify CocoaPods targets - they should use automatic signing
         sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' ios/Runner.xcodeproj/project.pbxproj
         sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/' ios/Runner.xcodeproj/project.pbxproj
         sed -i '' '/PRODUCT_NAME = Runner/,/};/ s/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "'$PROFILE_UUID'";/' ios/Runner.xcodeproj/project.pbxproj
+        
+        # Debug: Show Runner target signing settings after modification
+        echo "🔍 Runner target signing settings after modification:"
+        sed -n '/PRODUCT_NAME = Runner/,/};/p' ios/Runner.xcodeproj/project.pbxproj | grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER)" || echo "No signing settings found in Runner target"
         
         # Ensure CocoaPods targets use automatic signing (DO NOT specify provisioning profiles)
         if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
@@ -230,6 +238,25 @@ jobs:
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "${{ secrets.APPLE_TEAM_ID }}";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
           # Remove any provisioning profile specifiers from Pods targets
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+        fi
+        
+        # Fix Pods/Pods-Runner targets for automatic signing (clear out any code signing that may be left)
+        PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
+        if [ -f "$PBXPROJ" ]; then
+          echo "🔧 Cleaning up code signing from Pods targets"
+          
+          # Debug: Show Pods signing settings before cleanup
+          echo "🔍 Pods signing settings before cleanup:"
+          grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
+          
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' $PBXPROJ
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' $PBXPROJ
+          sed -i '' '/DEVELOPMENT_TEAM = .*/d' $PBXPROJ  # Remove DEVELOPMENT_TEAM lines from Pods
+          sed -i '' '/CODE_SIGN_IDENTITY = .*/d' $PBXPROJ  # Remove CODE_SIGN_IDENTITY lines from Pods
+          
+          # Debug: Show Pods signing settings after cleanup
+          echo "🔍 Pods signing settings after cleanup:"
+          grep -E "(CODE_SIGN_STYLE|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_IDENTITY)" $PBXPROJ || echo "No signing settings found in Pods"
         fi
         
         # Get dependencies
@@ -245,10 +272,6 @@ jobs:
           -configuration Release \
           -destination generic/platform=iOS \
           -archivePath build/ios/Runner.xcarchive \
-          CODE_SIGN_STYLE=Manual \
-          CODE_SIGN_IDENTITY="$CERT_NAME" \
-          DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-          PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
           archive
           
         # Export IPA
