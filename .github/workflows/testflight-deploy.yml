@@ -68,15 +68,19 @@ jobs:
           # Extract deployment info from project data
           BUNDLE_ID=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.bundleId // "${{ github.event.inputs.bundle_id }}"')
           VERSION=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.version // "${{ github.event.inputs.version }}"')
-          BUILD_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.deploymentInfo.buildNumber // "'$(date +%s)'"')
+          # Always generate fresh build number to avoid conflicts, ignore any existing buildNumber
+          BUILD_NUMBER=$(date +%s)
           USE_PROJECT_DATA=true
+          echo "🔄 Generated fresh build number: $BUILD_NUMBER (ignoring any existing buildNumber)"
         else
           echo "📱 Using manual inputs for app configuration"
-          # Use manual inputs
+          # Use manual inputs but generate fresh build number
           BUNDLE_ID='${{ github.event.inputs.bundle_id }}'
           VERSION='${{ github.event.inputs.version }}'
-          BUILD_NUMBER='${{ github.event.inputs.build_number }}'
+          # Always generate fresh build number instead of using potentially old default
+          BUILD_NUMBER=$(date +%s)
           USE_PROJECT_DATA=false
+          echo "🔄 Generated fresh build number: $BUILD_NUMBER (instead of manual input)"
           # Create minimal project data for backend call
           PROJECT_DATA='{"templateId":"default","projectId":"github-action-build","template":{},"deploymentInfo":{"appName":"'$APP_NAME'","bundleId":"'$BUNDLE_ID'","version":"'$VERSION'","buildNumber":"'$BUILD_NUMBER'"}}'
         fi
