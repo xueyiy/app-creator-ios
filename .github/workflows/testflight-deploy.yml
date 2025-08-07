@@ -475,6 +475,7 @@ jobs:
           -archivePath build/ios/Runner.xcarchive \
           CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
           MARKETING_VERSION="$VERSION" \
+          ASSETCATALOG_COMPILER_APPICON_NAME="AppIcon" \
           archive
           
         # Debug: Verify the built app has correct version information
@@ -483,6 +484,9 @@ jobs:
           echo "📋 App Info.plist version info:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "No CFBundleShortVersionString found"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "No CFBundleVersion found"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "No CFBundleIconName found"
+          echo "📦 CFBundleIcons in built app:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "(no CFBundleIcons)"
         else
           echo "❌ App Info.plist not found at expected location"
           echo "📁 Archive contents:"
