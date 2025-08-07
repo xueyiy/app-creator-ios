@@ -376,7 +376,17 @@ jobs:
         grep "PROVISIONING_PROFILE_SPECIFIER" ios/Pods/Pods.xcodeproj/project.pbxproj || echo "✅ All provisioning profiles removed from Pods."
         
         # Build iOS with no code signing first
-        flutter build ios --release --no-codesign
+        echo "🔨 Building Flutter iOS app with explicit version and build number..."
+        echo "📋 Build parameters:"
+        echo "   Version: $VERSION"
+        echo "   Build Number: $BUILD_NUMBER"
+        echo "   Expected pubspec.yaml version: $VERSION+$BUILD_NUMBER"
+        
+        # Verify pubspec.yaml has correct version before building
+        echo "🔍 Verifying pubspec.yaml version..."
+        grep "version:" pubspec.yaml || echo "No version found in pubspec.yaml"
+        
+        flutter build ios --release --no-codesign --build-name="$VERSION" --build-number="$BUILD_NUMBER"
         
         # Create archive with manual signing ONLY for Runner target
         echo "📦 Creating archive with manual signing for Runner target only..."
