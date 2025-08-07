@@ -1153,6 +1153,20 @@ ${indent})`;
   <true/>
   <key>UIApplicationSupportsIndirectInputEvents</key>
   <true/>
+  <key>CFBundleIcons</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon</string>
+      </array>
+      <key>UIPrerenderedIcon</key>
+      <true/>
+    </dict>
+  </dict>
+  <key>CFBundleIconName</key>
+  <string>AppIcon</string>
 </dict>
 </plist>
 `;
