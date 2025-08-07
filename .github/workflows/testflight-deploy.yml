@@ -626,6 +626,31 @@ jobs:
           echo "📱 App: $APP_NAME"
           echo "📦 Bundle ID: $BUNDLE_ID"
           echo "🔢 Version: $VERSION ($BUILD_NUMBER)"
+          
+          # Output build information for frontend consumption
+          echo "::set-output name=build_id::$BUILD_NUMBER"
+          echo "::set-output name=version::$VERSION"
+          echo "::set-output name=app_name::$APP_NAME"
+          echo "::set-output name=bundle_id::$BUNDLE_ID"
+          echo "::set-output name=status::success"
+          
+          # Create a JSON file with build details for potential API consumption
+          cat > build_info.json << EOF
+          {
+            "buildId": "$BUILD_NUMBER",
+            "version": "$VERSION",
+            "appName": "$APP_NAME",
+            "bundleId": "$BUNDLE_ID",
+            "status": "success",
+            "testFlightLink": "https://appstoreconnect.apple.com/apps",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          
+          echo "📄 Build info saved to build_info.json"
+          cat build_info.json
         else
           echo "❌ TestFlight deployment failed!"
+          echo "::set-output name=status::failed"
+          echo "::set-output name=error::Deployment failed"
         fi 
