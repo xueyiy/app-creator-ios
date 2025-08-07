@@ -128,6 +128,26 @@ jobs:
         # Extract the generated app
         echo "📦 Extracting generated Flutter app..."
         unzip -o app_package.zip
+
+        # Ensure ios/Runner/Info.plist has the correct version and build number
+        echo "🔧 Ensuring ios/Runner/Info.plist has correct MARKETING_VERSION and CURRENT_PROJECT_VERSION..."
+        if [ -f ios/Runner/Info.plist ]; then
+          echo "📋 Before patch:" 
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" ios/Runner/Info.plist || echo "(no CFBundleShortVersionString)"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/Runner/Info.plist || echo "(no CFBundleVersion)"
+
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ios/Runner/Info.plist 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/Runner/Info.plist 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" ios/Runner/Info.plist
+
+          echo "✅ After patch:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/Runner/Info.plist
+        else
+          echo "❌ ios/Runner/Info.plist not found after extraction"
+          ls -la ios || true
+        fi
         
         # Create exportOptions.plist for later use
         echo "📝 Creating exportOptions.plist..."
