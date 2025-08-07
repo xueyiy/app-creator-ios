@@ -407,10 +407,24 @@ jobs:
           -configuration Release \
           -destination generic/platform=iOS \
           -archivePath build/ios/Runner.xcarchive \
+          CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+          MARKETING_VERSION="$VERSION" \
           archive
           
+        # Debug: Verify the built app has correct version information
+        echo "🔍 Verifying built app version information..."
+        if [ -f "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" ]; then
+          echo "📋 App Info.plist version info:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "No CFBundleShortVersionString found"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "build/ios/Runner.xcarchive/Products/Applications/Runner.app/Info.plist" || echo "No CFBundleVersion found"
+        else
+          echo "❌ App Info.plist not found at expected location"
+          echo "📁 Archive contents:"
+          find build/ios/Runner.xcarchive -name "*.plist" | head -5
+        fi
+          
         # Export IPA
-        echo "�� Exporting IPA..."
+        echo " Exporting IPA..."
         
         # Debug: Verify provisioning profile and export options before export
         echo "🔍 PRE-EXPORT DEBUG: Verifying provisioning profile availability..."
