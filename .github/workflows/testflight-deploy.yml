@@ -135,15 +135,31 @@ jobs:
           echo "📋 Before patch:" 
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" ios/Runner/Info.plist || echo "(no CFBundleShortVersionString)"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/Runner/Info.plist || echo "(no CFBundleVersion)"
-
+ 
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ios/Runner/Info.plist 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/Runner/Info.plist 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" ios/Runner/Info.plist
+ 
+          # Ensure app icon keys exist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIconName AppIcon" ios/Runner/Info.plist 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleIconName string AppIcon" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIcons dict" ios/Runner/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon dict" ios/Runner/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconFiles array" ios/Runner/Info.plist 2>/dev/null || true
+          # Add AppIcon entry to icon files if not present
+          if ! /usr/libexec/PlistBuddy -c "Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconFiles" ios/Runner/Info.plist | grep -q AppIcon; then
+            /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconFiles:0 string AppIcon" ios/Runner/Info.plist 2>/dev/null || true
+          fi
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIcons:CFBundlePrimaryIcon:UIPrerenderedIcon true" ios/Runner/Info.plist 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleIcons:CFBundlePrimaryIcon:UIPrerenderedIcon bool true" ios/Runner/Info.plist
 
           echo "✅ After patch:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" ios/Runner/Info.plist || echo "(no CFBundleIconName)"
+          echo "📦 CFBundleIcons present?"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" ios/Runner/Info.plist || echo "(no CFBundleIcons)"
         else
           echo "❌ ios/Runner/Info.plist not found after extraction"
           ls -la ios || true
@@ -176,6 +192,8 @@ jobs:
         gen_icon 167 "Icon-App-83.5x83.5@2x~ipad.png"
         # marketing
         gen_icon 1024 "Icon-App-1024x1024@1x.png"
+        echo "📂 AppIcon files present:"
+        ls -1 "$ICONSET" || true
         
         # Create exportOptions.plist for later use
         echo "📝 Creating exportOptions.plist..."
