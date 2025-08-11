@@ -789,7 +789,8 @@ class HomeScreen extends StatelessWidget {
             color: ${this.parseColorToFlutter(backgroundColor)},
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return Stack(
+            return Stack(
+              fit: StackFit.expand,
                   children: [
 ${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).join(',\n')}
                   ],
@@ -815,13 +816,16 @@ ${positionedComponents.map(component => this.generateComponentWidget(component, 
 
     switch (type) {
       case 'Text':
-        widgetCode = this.generateTextWidget(props, indent);
+        widgetCode = this.generateTextWidget({ ...props, responsive: component.responsive }, indent);
         break;
       case 'Heading':
-        widgetCode = this.generateHeadingWidget(props, indent);
+        widgetCode = this.generateHeadingWidget({ ...props, responsive: component.responsive }, indent);
         break;
       case 'Button':
-        widgetCode = this.generateButtonWidget(props, indent);
+        widgetCode = this.generateButtonWidget({ ...props, responsive: component.responsive }, indent);
+        break;
+      case 'Card':
+        widgetCode = this.generateCardWidget(props, indent);
         break;
       case 'Icon':
         widgetCode = this.generateIconWidget(props, indent);
@@ -922,10 +926,12 @@ ${indent})`;
     const color = this.parseColorToFlutter(props.color || '#1f2937');
     const fontWeight = props.fontWeight === 'bold' ? 'FontWeight.bold' : 'FontWeight.w600';
 
+    const fontPercent = props && props.responsive ? props.responsive.fontPercent : undefined;
+
     return `${indent}Text(
 ${indent}  '${text.replace(/'/g, "\\'")}',
 ${indent}  style: TextStyle(
-${indent}    ${props && props.responsive && props.responsive.fontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${props.responsive.fontPercent},` : `fontSize: ${fontSize},`}
+${indent}    ${fontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${fontPercent},` : `fontSize: ${fontSize},`}
 ${indent}    color: ${color},
 ${indent}    fontWeight: ${fontWeight},
 ${indent}  ),
