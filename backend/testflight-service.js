@@ -783,18 +783,20 @@ class HomeScreen extends StatelessWidget {
           ),
         ],` : ''}
       ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
-        color: ${this.parseColorToFlutter(backgroundColor)},
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Stack(
-              children: [
-${positionedComponents.map(component => this.generateComponentWidget(component, '                ')).join(',\n')}
-              ],
-            );
-          },
+      body: SafeArea(
+        child: SizedBox.expand(
+          child: Container(
+            color: ${this.parseColorToFlutter(backgroundColor)},
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).join(',\n')}
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
