@@ -721,7 +721,11 @@ class HomeScreen extends StatelessWidget {
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
     const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
     const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
-    const appHeaderFontSize = appHeaderComponent?.props?.fontSize || 20;
+    // Support responsive title scaling when provided
+    const appHeaderTitlePercent = appHeaderComponent?.responsive?.titleFontPercent;
+    const appHeaderFontSize = appHeaderTitlePercent !== undefined
+      ? `MediaQuery.of(context).size.width * ${appHeaderTitlePercent}`
+      : (appHeaderComponent?.props?.fontSize || 20);
     const showBackButton = appHeaderComponent?.props?.showBackButton || false;
     const showMenuButton = appHeaderComponent?.props?.showMenuButton || false;
     
@@ -884,12 +888,13 @@ ${indent})`;
     const fontWeight = (props.fontWeight === 'bold' || props.fontWeight === '700') ? 'FontWeight.bold' : 'FontWeight.normal';
     const textAlign = props.textAlign === 'center' ? 'TextAlign.center' : props.textAlign === 'right' ? 'TextAlign.right' : 'TextAlign.left';
     const fontStyle = props.fontStyle === 'italic' ? 'FontStyle.italic' : 'FontStyle.normal';
+    const fontPercent = props?.responsive?.fontPercent;
 
     return `${indent}Text(
 ${indent}  '${text.replace(/'/g, "\\'")}',
 ${indent}  textAlign: ${textAlign},
 ${indent}  style: TextStyle(
-${indent}    fontSize: ${fontSize},
+${indent}    ${fontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${fontPercent},` : `fontSize: ${fontSize},`}
 ${indent}    color: ${color},
 ${indent}    fontWeight: ${fontWeight},
 ${indent}    fontStyle: ${fontStyle},
@@ -918,7 +923,7 @@ ${indent})`;
     return `${indent}Text(
 ${indent}  '${text.replace(/'/g, "\\'")}',
 ${indent}  style: TextStyle(
-${indent}    fontSize: ${fontSize},
+${indent}    ${props && props.responsive && props.responsive.fontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${props.responsive.fontPercent},` : `fontSize: ${fontSize},`}
 ${indent}    color: ${color},
 ${indent}    fontWeight: ${fontWeight},
 ${indent}  ),
@@ -960,7 +965,7 @@ ${indent}  ),
 ${indent}  child: Text(
 ${indent}    '${text.replace(/'/g, "\\'")}',
 ${indent}    style: TextStyle(
-${indent}      fontSize: ${fontSize},
+${indent}      ${props && props.responsive && props.responsive.fontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${props.responsive.fontPercent},` : `fontSize: ${fontSize},`}
 ${indent}      fontWeight: ${fontWeight},
 ${indent}    ),
 ${indent}  ),
