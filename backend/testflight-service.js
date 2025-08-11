@@ -783,10 +783,14 @@ class HomeScreen extends StatelessWidget {
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - MediaQuery.of(context).padding.top,
         color: ${this.parseColorToFlutter(backgroundColor)},
-        child: Stack(
-          children: [
-${positionedComponents.map(component => this.generateComponentWidget(component, '            ')).join(',\n')}
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+${positionedComponents.map(component => this.generateComponentWidget(component, '                ')).join(',\n')}
+              ],
+            );
+          },
         ),
       ),
     );
@@ -831,8 +835,39 @@ ${indent}  child: Text('${type}'),
 ${indent})`;
     }
 
-    // Wrap with Positioned widget for absolute positioning
-    // Note: Coordinates are from the design canvas and position relative to the body (below AppBar)
+    // Prefer responsive percentages when available; fallback to pixel positioning
+    const responsive = component.responsive || {};
+    const hasResponsive = (
+      responsive.xPercent !== undefined ||
+      responsive.yPercent !== undefined ||
+      responsive.widthPercent !== undefined ||
+      responsive.heightPercent !== undefined
+    );
+
+    if (hasResponsive) {
+      const leftExpr = (responsive.xPercent !== undefined)
+        ? `constraints.maxWidth * ${responsive.xPercent}`
+        : `${position.x || 0}.0`;
+      const topExpr = (responsive.yPercent !== undefined)
+        ? `constraints.maxHeight * ${responsive.yPercent}`
+        : `${position.y || 0}.0`;
+      const widthExpr = (responsive.widthPercent !== undefined)
+        ? `constraints.maxWidth * ${responsive.widthPercent}`
+        : `${size.width || 100}.0`;
+      const heightExpr = (responsive.heightPercent !== undefined)
+        ? `constraints.maxHeight * ${responsive.heightPercent}`
+        : `${size.height || 30}.0`;
+
+      return `${indent}Positioned(
+${indent}  left: ${leftExpr},
+${indent}  top: ${topExpr},
+${indent}  width: ${widthExpr},
+${indent}  height: ${heightExpr},
+${indent}  child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), indent + '  ')},
+${indent})`;
+    }
+
+    // Legacy pixel-based positioning
     return `${indent}Positioned(
 ${indent}  left: ${position.x || 0}.0,
 ${indent}  top: ${position.y || 0}.0,
