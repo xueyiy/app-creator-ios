@@ -716,12 +716,14 @@ class HomeScreen extends StatelessWidget {
     const screenName = screenData.screenName || 'home';
     const backgroundColor = screenProperties.backgroundColor || '#ffffff';
     
-    // Find AppHeader component to extract properties
+    // Determine layout strategy
+    const useAbsoluteLayout = this.shouldUseAbsoluteLayout(components);
+    
+    // Find AppHeader (used in either strategy)
     const appHeaderComponent = components.find(c => c.type === 'AppHeader');
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
     const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
     const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
-    // Support responsive title scaling when provided
     const appHeaderTitlePercent = appHeaderComponent?.responsive?.titleFontPercent;
     const appHeaderFontSize = appHeaderTitlePercent !== undefined
       ? `MediaQuery.of(context).size.width * ${appHeaderTitlePercent}`
@@ -729,10 +731,10 @@ class HomeScreen extends StatelessWidget {
     const showBackButton = appHeaderComponent?.props?.showBackButton || false;
     const showMenuButton = appHeaderComponent?.props?.showMenuButton || false;
     
-    // Filter out AppHeader from positioned components since it's handled by Scaffold
-    const positionedComponents = components.filter(c => c.type !== 'AppHeader');
+    // For absolute layout, include all components (AppHeader will be positioned too)
+    const positionedComponents = useAbsoluteLayout ? components : components.filter(c => c.type !== 'AppHeader');
     
-    console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName}`);
+    console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName} (absoluteLayout=${useAbsoluteLayout})`);
 
     return `import 'package:flutter/material.dart';
 
@@ -759,7 +761,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      ${useAbsoluteLayout ? '' : `appBar: AppBar(
         title: Text(
           '${appTitle}',
           style: TextStyle(
@@ -782,7 +784,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {},
           ),
         ],` : ''}
-      ),
+      ),`}
       body: SafeArea(
         child: SizedBox.expand(
           child: Container(
@@ -791,10 +793,10 @@ class HomeScreen extends StatelessWidget {
               builder: (context, constraints) {
             return Stack(
               fit: StackFit.expand,
-                  children: [
+              children: [
 ${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).join(',\n')}
-                  ],
-                );
+              ],
+            );
               },
             ),
           ),
@@ -804,6 +806,21 @@ ${positionedComponents.map(component => this.generateComponentWidget(component, 
   }
 }
 `;
+  }
+
+  // Decide if absolute layout should be used based on responsive percentages or explicit positions
+  shouldUseAbsoluteLayout(components) {
+    try {
+      if (!components || !Array.isArray(components)) return false;
+      return components.some(c => {
+        const r = c?.responsive || {};
+        const hasPercents = r.xPercent !== undefined || r.yPercent !== undefined || r.widthPercent !== undefined || r.heightPercent !== undefined;
+        const hasPixelPos = c?.position?.x !== undefined || c?.position?.y !== undefined;
+        return hasPercents || hasPixelPos;
+      });
+    } catch (_) {
+      return false;
+    }
   }
 
   generateComponentWidget(component, indent) {
@@ -939,9 +956,46 @@ ${indent})`;
   }
 
   generateAppHeaderWidget(props, indent) {
-    // AppHeader is handled in the main screen generation, not as a positioned widget
-    // Return empty string since it's already handled by Scaffold appBar
-    return '';
+    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#3b82f6');
+    const title = props.appTitle || 'App';
+    const titleColor = this.parseColorToFlutter(props.titleColor || '#ffffff');
+    const titleSize = Math.max(parseFloat(props.titleSize) || parseFloat(props.fontSize) || 18, 12);
+    const titleFontPercent = props?.responsive?.titleFontPercent; // may be undefined
+    const height = Math.max(parseFloat(props.height) || 64, 44);
+    const showBack = props.showBackButton || false;
+    const showMenu = props.showMenuButton || false;
+    const iconColor = this.parseColorToFlutter(props.iconColor || '#ffffff');
+
+    return `${indent}Container(
+${indent}  height: ${height},
+${indent}  decoration: BoxDecoration(color: ${backgroundColor}),
+${indent}  child: SafeArea(
+${indent}    bottom: false,
+${indent}    child: Padding(
+${indent}      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+${indent}      child: Row(
+${indent}        children: [
+${showBack ? `${indent}          Icon(Icons.arrow_back, color: ${iconColor}),
+${indent}          SizedBox(width: 8),` : ''}
+${indent}          Expanded(
+${indent}            child: Text(
+${indent}              '${title.replace(/'/g, "\\'")}',
+${indent}              textAlign: TextAlign.center,
+${indent}              overflow: TextOverflow.ellipsis,
+${indent}              style: TextStyle(
+${indent}                color: ${titleColor},
+${indent}                ${titleFontPercent !== undefined ? `fontSize: MediaQuery.of(context).size.width * ${titleFontPercent},` : `fontSize: ${titleSize},`}
+${indent}                fontWeight: FontWeight.w600,
+${indent}              ),
+${indent}            ),
+${indent}          ),
+${showMenu ? `${indent}          SizedBox(width: 8),
+${indent}          Icon(Icons.menu, color: ${iconColor}),` : ''}
+${indent}        ],
+${indent}      ),
+${indent}    ),
+${indent}  ),
+${indent})`;
   }
 
   generateButtonWidget(props, indent) {
@@ -953,6 +1007,9 @@ ${indent})`;
     const borderRadius = parseFloat(props.borderRadius) || 8;
     const borderColor = this.parseColorToFlutter(props.borderColor || backgroundColor);
     const borderWidth = parseFloat(props.borderWidth) || 0;
+    const paddingAll = props.padding !== undefined ? Math.max(parseFloat(props.padding) || 0, 0) : null;
+    const paddingH = props.paddingHorizontal !== undefined ? Math.max(parseFloat(props.paddingHorizontal) || 0, 0) : null;
+    const paddingV = props.paddingVertical !== undefined ? Math.max(parseFloat(props.paddingVertical) || 0, 0) : null;
 
     return `${indent}ElevatedButton(
 ${indent}  onPressed: () {
@@ -968,7 +1025,9 @@ ${indent}    ),
 ${indent}    shape: RoundedRectangleBorder(
 ${indent}      borderRadius: BorderRadius.circular(${borderRadius}),
 ${indent}    ),
-${indent}    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+${indent}    ${paddingAll !== null
+      ? `padding: EdgeInsets.all(${paddingAll}),`
+      : `padding: EdgeInsets.symmetric(horizontal: ${paddingH !== null ? paddingH : 16}, vertical: ${paddingV !== null ? paddingV : 12}),`}
 ${indent}  ),
 ${indent}  child: Text(
 ${indent}    '${text.replace(/'/g, "\\'")}',
