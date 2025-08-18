@@ -665,7 +665,7 @@ class MyApp extends StatelessWidget {
       title: '${appConfig.appName || 'Generated App'}',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
       ),
       home: HomeScreen(),
     );
@@ -721,8 +721,8 @@ class HomeScreen extends StatelessWidget {
     // Find AppHeader (used in either strategy)
     const appHeaderComponent = components.find(c => c.type === 'AppHeader');
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
-    const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
-    const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
+    const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || backgroundColor || '#ffffff';
+    const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#111111';
     const appHeaderTitlePercent = appHeaderComponent?.responsive?.titleFontPercent;
     const appHeaderFontSize = appHeaderTitlePercent !== undefined
       ? `MediaQuery.of(context).size.width * ${appHeaderTitlePercent}`
@@ -730,8 +730,8 @@ class HomeScreen extends StatelessWidget {
     const showBackButton = appHeaderComponent?.props?.showBackButton || false;
     const showMenuButton = appHeaderComponent?.props?.showMenuButton || false;
     
-    // For absolute layout, include all components (AppHeader will be positioned too)
-    const positionedComponents = useAbsoluteLayout ? components : components.filter(c => c.type !== 'AppHeader');
+    // Always exclude AppHeader from positioned components; render via Scaffold.appBar
+    const positionedComponents = components.filter(c => c.type !== 'AppHeader');
     
     console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName} (absoluteLayout=${useAbsoluteLayout})`);
 
@@ -761,7 +761,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      ${useAbsoluteLayout ? '' : `appBar: AppBar(
+      ${appHeaderComponent ? `appBar: AppBar(
         title: Text(
           '${appTitle}',
           style: TextStyle(
@@ -784,7 +784,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {},
           ),
         ],` : ''}
-      ),`}
+      ),` : ''}
       body: SafeArea(
         child: SizedBox.expand(
           child: Container(
@@ -956,15 +956,15 @@ ${indent})`;
   }
 
   generateAppHeaderWidget(props, indent) {
-    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#3b82f6');
+    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#ffffff');
     const title = props.appTitle || 'App';
-    const titleColor = this.parseColorToFlutter(props.titleColor || '#ffffff');
+    const titleColor = this.parseColorToFlutter(props.titleColor || '#111111');
     const titleSize = Math.max(parseFloat(props.titleSize) || parseFloat(props.fontSize) || 18, 12);
     const titleFontPercent = props?.responsive?.titleFontPercent; // may be undefined
     const height = Math.max(parseFloat(props.height) || 64, 44);
     const showBack = props.showBackButton || false;
     const showMenu = props.showMenuButton || false;
-    const iconColor = this.parseColorToFlutter(props.iconColor || '#ffffff');
+    const iconColor = this.parseColorToFlutter(props.iconColor || '#111111');
 
     return `${indent}Container(
 ${indent}  height: ${height},
