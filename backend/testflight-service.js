@@ -721,8 +721,8 @@ class HomeScreen extends StatelessWidget {
     // Find AppHeader (used in either strategy)
     const appHeaderComponent = components.find(c => c.type === 'AppHeader');
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
-    const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || backgroundColor || '#ffffff';
-    const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#111111';
+    const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
+    const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
     const appHeaderTitlePercent = appHeaderComponent?.responsive?.titleFontPercent;
     const appHeaderFontSize = appHeaderTitlePercent !== undefined
       ? `MediaQuery.of(context).size.width * ${appHeaderTitlePercent}`
@@ -785,21 +785,17 @@ class HomeScreen extends StatelessWidget {
           ),
         ],` : ''}
       ),` : ''}
+      backgroundColor: ${this.parseColorToFlutter(backgroundColor)},
       body: SafeArea(
-        child: SizedBox.expand(
-          child: Container(
-            color: ${this.parseColorToFlutter(backgroundColor)},
-            child: LayoutBuilder(
-              builder: (context, constraints) {
+        child: LayoutBuilder(
+          builder: (context, constraints) {
             return Stack(
               fit: StackFit.expand,
               children: [
 ${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).join(',\n')}
               ],
             );
-              },
-            ),
-          ),
+          },
         ),
       ),
     );
@@ -956,15 +952,15 @@ ${indent})`;
   }
 
   generateAppHeaderWidget(props, indent) {
-    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#ffffff');
+    const backgroundColor = this.parseColorToFlutter(props.backgroundColor || '#3b82f6');
     const title = props.appTitle || 'App';
-    const titleColor = this.parseColorToFlutter(props.titleColor || '#111111');
+    const titleColor = this.parseColorToFlutter(props.titleColor || '#ffffff');
     const titleSize = Math.max(parseFloat(props.titleSize) || parseFloat(props.fontSize) || 18, 12);
     const titleFontPercent = props?.responsive?.titleFontPercent; // may be undefined
     const height = Math.max(parseFloat(props.height) || 64, 44);
     const showBack = props.showBackButton || false;
     const showMenu = props.showMenuButton || false;
-    const iconColor = this.parseColorToFlutter(props.iconColor || '#111111');
+    const iconColor = this.parseColorToFlutter(props.iconColor || '#ffffff');
 
     return `${indent}Container(
 ${indent}  height: ${height},
