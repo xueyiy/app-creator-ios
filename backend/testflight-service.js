@@ -664,8 +664,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '${appConfig.appName || 'Generated App'}',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
       home: HomeScreen(),
     );
@@ -678,7 +678,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('${appConfig.appName || 'Generated App'}'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Center(
         child: Column(
@@ -748,8 +747,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '${appConfig.appName || 'Generated App'}',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: ${this.parseColorToFlutter(appHeaderBgColor)}),
+        scaffoldBackgroundColor: ${this.parseColorToFlutter(backgroundColor)},
       ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -773,7 +773,7 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: ${this.parseColorToFlutter(appHeaderBgColor)},
         foregroundColor: ${this.parseColorToFlutter(appHeaderTextColor)},
         elevation: 1,
-        centerTitle: true,${showBackButton ? `
+        centerTitle: false,${showBackButton ? `
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
