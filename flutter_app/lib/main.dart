@@ -8,10 +8,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI Project - 8bccf8ec-af37-4fb4-bc4d-5a6261bae1dd',
+      title: 'AI Project - 3cfae4e0-8e83-4d1f-8d19-6c45648afe4f',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFAB90C6)),
+        // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
+        scaffoldBackgroundColor: (("${backgroundColor}" == "${appHeaderBgColor}") ? Colors.white : Color(0xFFFFFFFF)),
       ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -23,93 +25,117 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      body: SafeArea(
-        child: SizedBox.expand(
-          child: Container(
+      appBar: AppBar(
+        toolbarHeight: 64,
+        title: Text(
+          'Travel App',
+          style: TextStyle(
+            fontSize: 24,
             color: Color(0xFFFFFFFF),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Color(0xFFAB90C6),
+        foregroundColor: Color(0xFFFFFFFF),
+        elevation: 1,
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      backgroundColor: Color(0xFFFFFFFF),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Force full-viewport canvas so coordinates map 1:1 to device size
             return Stack(
               fit: StackFit.expand,
+              clipBehavior: Clip.none,
               children: [
-                    Positioned(
-                      left: 60.0,
-                      top: 140.0,
-                      width: 150.0,
-                      height: 50.0,
-                      child:                       Text(
-                        'Heading',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Color(0xFF1F2937),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double sx = constraints.maxWidth / 360.0;
+                        final double sy = constraints.maxHeight / 720.0;
+                        return Positioned(
+                          left: 0 * sx,
+                          top: 130 * sy,
+                          width: 270 * sx,
+                          height: 35 * sy,
+                          child:                           Text(
+                            'Welcome to Your Travel App',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF1F2937),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    Container(
-                      height: 64,
-                      decoration: BoxDecoration(color: Color(0xFF3B82F6)),
-                      child: SafeArea(
-                        bottom: false,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            children: [
-
-                              Expanded(
-                                child: Text(
-                                  'App',
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Color(0xFFFFFFFF),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double sx = constraints.maxWidth / 360.0;
+                        final double sy = constraints.maxHeight / 720.0;
+                        return Positioned(
+                          left: 30 * sx,
+                          top: 320 * sy,
+                          width: 200 * sx,
+                          height: 45 * sy,
+                          child:                           ElevatedButton(
+                            onPressed: () {
+                              // Add button action here
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF93A1B8),
+                              foregroundColor: Color(0xFFFFFFFF),
+                              side: BorderSide(
+                                color: Color(0xFF3B82F6),
+                                width: 0,
                               ),
-
-                            ],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            child: Text(
+                              'Explore',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
-                    Positioned(
-                      left: 90.0,
-                      top: 300.0,
-                      width: 100.0,
-                      height: 40.0,
-                      child:                       ElevatedButton(
-                        onPressed: () {
-                          // Add button action here
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF3B82F6),
-                          foregroundColor: Color(0xFFFFFFFF),
-                          side: BorderSide(
-                            color: Colors.black,
-                            width: 0,
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double sx = constraints.maxWidth / 360.0;
+                        final double sy = constraints.maxHeight / 720.0;
+                        return Positioned(
+                          left: 80 * sx,
+                          top: 450 * sy,
+                          width: 100 * sx,
+                          height: 40 * sy,
+                          child:                           Text(
+                            'Text',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF000000),
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FontStyle.normal,
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        child: Text(
-                          'Button',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     )
               ],
             );
-              },
-            ),
-          ),
+          },
         ),
       ),
     );

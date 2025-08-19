@@ -460,7 +460,7 @@ class TestFlightService {
       console.log(`   🔧 Node Version: ${process.version}`);
       console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
       
-      const { templateId, projectId, template, deploymentInfo } = projectData;
+      const { templateId, projectId, template, deploymentInfo, pageId, firebaseToken, fetchFromBackend } = projectData;
       
       console.log('📋 Project Data Summary:');
       console.log('  - Template ID:', templateId);
@@ -472,30 +472,36 @@ class TestFlightService {
       console.log('  - Version:', deploymentInfo?.version);
       console.log('  - Build Number:', deploymentInfo?.buildNumber);
       
-      // Convert screen data to proper format for Flutter generation
-      const processedScreens = [];
+      // Convert screen data to proper format for Flutter generation (from request body)
+      let processedScreens = [];
       if (template?.screens && template.screens.length > 0) {
         for (const screen of template.screens) {
           let components = [];
-          
-          // Check multiple possible component sources
           if (screen.content?.droppedComponents) {
             components = screen.content.droppedComponents;
             console.log(`📱 Using droppedComponents for screen ${screen.name}: ${components.length} components`);
           } else if (screen.components) {
             components = screen.components;
             console.log(`📱 Using direct components for screen ${screen.name}: ${components.length} components`);
-          } else {
-            console.log(`⚠️  No components found for screen ${screen.name}`);
           }
-          
           processedScreens.push({
             screenName: screen.name || screen.screenName || 'home',
             originalName: screen.originalName || screen.name || 'Home',
-            components: components,
+            components,
             screenProperties: screen.screenProperties || screen.content?.screenProperties || {},
             metadata: screen.metadata || {}
           });
+        }
+      }
+
+      // Optionally fetch latest JSON from backend by project/page id
+      if (fetchFromBackend || processedScreens.length === 0) {
+        const fetched = await this.tryFetchScreensFromBackend({ projectId, pageId, firebaseToken });
+        if (fetched && fetched.length > 0) {
+          console.log(`🌐 Using screens fetched from backend: ${fetched.length}`);
+          processedScreens = fetched;
+        } else {
+          console.log('⚠️  Backend fetch returned no screens; using request body data if any.');
         }
       }
       
@@ -650,6 +656,76 @@ flutter:
 
     // Generate Flutter app using the same component rendering logic as frontend
     return this.generateMainDartFromComponents(appConfig, screenData);
+  }
+
+  // Try to fetch current screen JSON(s) from backend by projectId/pageId
+  async tryFetchScreensFromBackend({ projectId, pageId, firebaseToken }) {
+    try {
+      const screens = [];
+      const baseUrl = process.env.FIREBASE_API_BASE_URL || 'http://10.80.7.189:3200';
+      const headers = { 'Content-Type': 'application/json' };
+      if (firebaseToken) headers['Access-Token'] = firebaseToken;
+
+      // If pageId provided, fetch single page JSON
+      if (pageId) {
+        const url = `${baseUrl}/project/pages/${pageId}`;
+        console.log(`🌐 Fetching page JSON for packaging: ${url}`);
+        const res = await fetch(url, { method: 'GET', headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.json) {
+            screens.push({
+              screenName: data.json.screenName || 'home',
+              originalName: data.json.originalName || 'Home',
+              components: data.json.components || [],
+              screenProperties: data.json.screenProperties || {},
+              metadata: data.json.metadata || {}
+            });
+          }
+        } else {
+          console.log(`⚠️  Failed to fetch page JSON: ${res.status}`);
+        }
+      }
+
+      // If projectId provided and no pageId, fetch pages list and then first page JSON
+      if (screens.length === 0 && projectId) {
+        const listUrl = `${baseUrl}/project/${projectId}/pages`;
+        console.log(`🌐 Fetching project pages for packaging: ${listUrl}`);
+        const res = await fetch(listUrl, { method: 'GET', headers });
+        if (res.ok) {
+          const pages = await res.json();
+          const first = Array.isArray(pages) ? pages[0] : null;
+          if (first?.id) {
+            const pageUrl = `${baseUrl}/project/pages/${first.id}`;
+            console.log(`🌐 Fetching first page JSON: ${pageUrl}`);
+            const pageRes = await fetch(pageUrl, { method: 'GET', headers });
+            if (pageRes.ok) {
+              const page = await pageRes.json();
+              if (page?.json) {
+                screens.push({
+                  screenName: page.json.screenName || 'home',
+                  originalName: page.json.originalName || 'Home',
+                  components: page.json.components || [],
+                  screenProperties: page.json.screenProperties || {},
+                  metadata: page.json.metadata || {}
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Validate components and ensure responsive properties are preserved
+      if (screens.length > 0) {
+        screens.forEach((s, i) => {
+          console.log(`✅ Backend screen ${i + 1}: ${s.screenName} (${(s.components || []).length} components)`);
+        });
+      }
+      return screens;
+    } catch (err) {
+      console.log('⚠️  Error fetching screens from backend:', err.message);
+      return [];
+    }
   }
 
   generateFallbackMainDart(appConfig) {

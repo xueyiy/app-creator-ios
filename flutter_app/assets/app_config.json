@@ -1,5 +1,5 @@
 {
-  "appName": "AI Project - 8bccf8ec-af37-4fb4-bc4d-5a6261bae1dd",
+  "appName": "AI Project - 3cfae4e0-8e83-4d1f-8d19-6c45648afe4f",
   "bundleId": "com.visios.nocode",
   "screens": [
     {
@@ -7,73 +7,125 @@
       "originalName": "Home",
       "components": [
         {
-          "id": "component_1755543349485",
-          "type": "Heading",
-          "name": "Heading",
-          "position": {
-            "x": 60,
-            "y": 140
-          },
+          "id": "component_1697568000000",
+          "name": "Main App Header",
           "size": {
-            "width": 150,
-            "height": 50
+            "width": 270,
+            "height": 70
           },
+          "type": "AppHeader",
           "layer": 1,
           "props": {
-            "text": "Heading",
-            "color": "#1f2937",
-            "level": "h3",
-            "fontStyle": "normal",
-            "fontFamily": "inherit",
-            "fontWeight": "bold",
-            "lineHeight": "normal",
-            "letterSpacing": "normal",
-            "textTransform": "none",
-            "textDecoration": "none"
+            "appIcon": "home",
+            "appTitle": "Travel App",
+            "fontSize": 24,
+            "titleColor": "#ffffff",
+            "showAppIcon": false,
+            "borderRadius": "0px",
+            "showBackButton": false,
+            "showMenuButton": true,
+            "backgroundColor": "#ab90c6"
           },
-          "metadata": {
-            "createdAt": "2025-08-18T19:05:59.117Z",
-            "updatedAt": "2025-08-18T19:06:24.049Z"
-          }
-        },
-        {
-          "id": "component_1755543967178",
-          "type": "AppHeader",
-          "name": "App Header",
           "position": {
             "x": 0,
             "y": 0
           },
-          "size": {
-            "width": 270,
-            "height": 64
-          },
-          "layer": 2,
-          "props": {},
-          "metadata": {
-            "createdAt": "2025-08-18T19:06:24.049Z",
-            "updatedAt": "2025-08-18T19:06:24.049Z"
+          "createdAt": "2025-08-19T14:52:25.408Z",
+          "updatedAt": "2025-08-19T15:13:13.812Z",
+          "properties": {
+            "appIcon": "home",
+            "appTitle": "Travel App",
+            "fontSize": 24,
+            "titleColor": "#ffffff",
+            "showAppIcon": false,
+            "borderRadius": "0px",
+            "showBackButton": false,
+            "showMenuButton": true,
+            "backgroundColor": "#ab90c6"
           }
         },
         {
-          "id": "component_1755543973311",
-          "type": "Button",
-          "name": "Button",
-          "position": {
-            "x": 90,
-            "y": 300
+          "id": "component_1697568060000",
+          "name": "Welcome Heading",
+          "size": {
+            "width": 270,
+            "height": 35
           },
+          "type": "Heading",
+          "layer": 2,
+          "props": {
+            "text": "Welcome to Your Travel App",
+            "color": "#1f2937",
+            "level": "h5",
+            "padding": "8px",
+            "fontSize": 24,
+            "textAlign": "center",
+            "fontWeight": "600",
+            "backgroundColor": "transparent"
+          },
+          "metadata": {
+            "createdAt": "2025-08-19T15:13:13.812Z",
+            "updatedAt": "2025-08-19T15:13:46.970Z"
+          },
+          "position": {
+            "x": 0,
+            "y": 130
+          }
+        },
+        {
+          "id": "component_1697568180000",
+          "name": "Explore Button",
+          "size": {
+            "width": 200,
+            "height": 45
+          },
+          "type": "Button",
+          "layer": 4,
+          "props": {
+            "text": "Explore",
+            "color": "#ffffff",
+            "fontSize": 14,
+            "boxShadow": "none",
+            "textAlign": "center",
+            "buttonIcon": "search",
+            "fontWeight": "400",
+            "borderColor": "#3b82f6",
+            "borderStyle": "solid",
+            "borderWidth": "0px",
+            "borderRadius": "6px",
+            "buttonIconSize": 16,
+            "backgroundColor": "#93a1b8",
+            "buttonIconColor": "#ffffff",
+            "buttonIconPosition": "left"
+          },
+          "metadata": {
+            "createdAt": "2025-08-19T15:13:13.812Z",
+            "updatedAt": "2025-08-19T15:13:46.970Z"
+          },
+          "position": {
+            "x": 30,
+            "y": 320
+          }
+        },
+        {
+          "id": "component_1755616404653",
+          "name": "Text",
           "size": {
             "width": 100,
             "height": 40
           },
-          "layer": 3,
+          "type": "Text",
+          "layer": 5,
           "props": {
-            "text": "Button"
+            "text": "Text"
           },
           "metadata": {
-            "createdAt": "2025-08-18T19:06:24.049Z",
-            "updatedAt": "2025-08-18T19:06:24.049Z"
+            "createdAt": "2025-08-19T15:13:37.900Z",
+            "updatedAt": "2025-08-19T15:13:46.970Z"
+          },
+          "position": {
+            "x": 80,
+            "y": 450
           }
         }
       ],
@@ -81,16 +133,20 @@
         "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "createdAt": "2025-08-18T18:55:43.000Z",
-        "updatedAt": "2025-08-18T19:06:13.312Z",
-        "totalComponents": 3
+        "source": "DropCanvas cache",
+        "instanceId": "zs1c4qb6i",
+        "lastUpdated": "2025-08-19T15:13:52.130Z",
+        "totalComponents": 4,
+        "createdAt": "1970-01-21T07:39:08.467Z",
+        "updatedAt": "1970-01-21T07:40:16.432Z",
+        "pageId": "36d8c19a-e84c-4e2a-8493-aacdb59bae8e"
       }
     }
   ],
-  "projectId": "8bccf8ec-af37-4fb4-bc4d-5a6261bae1dd",
+  "projectId": "3cfae4e0-8e83-4d1f-8d19-6c45648afe4f",
   "templateId": "newProject",
-  "buildTime": "2025-08-18T19:06:33.088Z",
+  "buildTime": "2025-08-19T16:41:11.744Z",
   "appIcon": null,
   "version": "1.0.1",
-  "buildNumber": "1755543984"
+  "buildNumber": "1755621671"
 }
