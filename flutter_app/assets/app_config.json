@@ -8,12 +8,16 @@
       "components": [
         {
           "id": "component_1697568000000",
+          "type": "AppHeader",
           "name": "Main App Header",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
           "size": {
             "width": 270,
             "height": 70
           },
-          "type": "AppHeader",
           "layer": 1,
           "props": {
             "appIcon": "home",
@@ -24,34 +28,25 @@
             "borderRadius": "0px",
             "showBackButton": false,
             "showMenuButton": true,
-            "backgroundColor": "#ab90c6"
+            "backgroundColor": "#b3a5c0"
           },
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "createdAt": "2025-08-19T14:52:25.408Z",
-          "updatedAt": "2025-08-19T15:13:13.812Z",
-          "properties": {
-            "appIcon": "home",
-            "appTitle": "Travel App",
-            "fontSize": 24,
-            "titleColor": "#ffffff",
-            "showAppIcon": false,
-            "borderRadius": "0px",
-            "showBackButton": false,
-            "showMenuButton": true,
-            "backgroundColor": "#ab90c6"
+          "metadata": {
+            "createdAt": "2025-08-19T19:02:43.737Z",
+            "updatedAt": "2025-08-19T19:03:01.337Z"
           }
         },
         {
           "id": "component_1697568060000",
+          "type": "Heading",
           "name": "Welcome Heading",
+          "position": {
+            "x": 0,
+            "y": 130
+          },
           "size": {
             "width": 270,
             "height": 35
           },
-          "type": "Heading",
           "layer": 2,
           "props": {
             "text": "Welcome to Your Travel App",
@@ -64,22 +59,22 @@
             "backgroundColor": "transparent"
           },
           "metadata": {
-            "createdAt": "2025-08-19T15:13:13.812Z",
-            "updatedAt": "2025-08-19T15:13:46.970Z"
-          },
-          "position": {
-            "x": 0,
-            "y": 130
+            "createdAt": "2025-08-19T19:03:01.337Z",
+            "updatedAt": "2025-08-19T19:03:01.337Z"
           }
         },
         {
           "id": "component_1697568180000",
+          "type": "Button",
           "name": "Explore Button",
+          "position": {
+            "x": 30,
+            "y": 320
+          },
           "size": {
             "width": 200,
             "height": 45
           },
-          "type": "Button",
           "layer": 4,
           "props": {
             "text": "Explore",
@@ -99,33 +94,29 @@
             "buttonIconPosition": "left"
           },
           "metadata": {
-            "createdAt": "2025-08-19T15:13:13.812Z",
-            "updatedAt": "2025-08-19T15:13:46.970Z"
-          },
-          "position": {
-            "x": 30,
-            "y": 320
+            "createdAt": "2025-08-19T19:03:01.337Z",
+            "updatedAt": "2025-08-19T19:03:01.337Z"
           }
         },
         {
           "id": "component_1755616404653",
+          "type": "Text",
           "name": "Text",
+          "position": {
+            "x": 80,
+            "y": 450
+          },
           "size": {
             "width": 100,
             "height": 40
           },
-          "type": "Text",
           "layer": 5,
           "props": {
             "text": "Text"
           },
           "metadata": {
-            "createdAt": "2025-08-19T15:13:37.900Z",
-            "updatedAt": "2025-08-19T15:13:46.970Z"
-          },
-          "position": {
-            "x": 80,
-            "y": 450
+            "createdAt": "2025-08-19T19:03:01.337Z",
+            "updatedAt": "2025-08-19T19:03:01.337Z"
           }
         }
       ],
@@ -133,20 +124,16 @@
         "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "source": "DropCanvas cache",
-        "instanceId": "zs1c4qb6i",
-        "lastUpdated": "2025-08-19T15:13:52.130Z",
-        "totalComponents": 4,
-        "createdAt": "1970-01-21T07:39:08.467Z",
-        "updatedAt": "1970-01-21T07:40:16.432Z",
-        "pageId": "36d8c19a-e84c-4e2a-8493-aacdb59bae8e"
+        "createdAt": "2025-08-18T20:21:07.000Z",
+        "updatedAt": "2025-08-19T19:02:51.362Z",
+        "totalComponents": 4
       }
     }
   ],
   "projectId": "3cfae4e0-8e83-4d1f-8d19-6c45648afe4f",
   "templateId": "newProject",
-  "buildTime": "2025-08-19T16:41:11.744Z",
+  "buildTime": "2025-08-19T19:08:11.964Z",
   "appIcon": null,
   "version": "1.0.1",
-  "buildNumber": "1755621671"
+  "buildNumber": "1755630181"
 }

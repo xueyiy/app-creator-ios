@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'AI Project - 3cfae4e0-8e83-4d1f-8d19-6c45648afe4f',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFAB90C6)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFB3A5C0)),
         // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
         scaffoldBackgroundColor: (("${backgroundColor}" == "${appHeaderBgColor}") ? Colors.white : Color(0xFFFFFFFF)),
       ),
@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Color(0xFFAB90C6),
+        backgroundColor: Color(0xFFB3A5C0),
         foregroundColor: Color(0xFFFFFFFF),
         elevation: 1,
         centerTitle: false,
