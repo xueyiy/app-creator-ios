@@ -100,12 +100,11 @@ jobs:
         echo "   Build Number: $BUILD_NUMBER"
         echo "   Using Project Data: $USE_PROJECT_DATA"
         
-        # Store in environment for later steps
+        # Store minimal environment for later steps (avoid exporting large JSON)
         echo "BUNDLE_ID=$BUNDLE_ID" >> $GITHUB_ENV
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
         echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
-        echo "PROJECT_DATA=$PROJECT_DATA" >> $GITHUB_ENV
         
         mkdir -p flutter_project
         cd flutter_project
@@ -128,6 +127,8 @@ jobs:
         fi
         
         echo "🌐 Using backend URL: $BACKEND_URL"
+        # Compact JSON to avoid quoting issues and ensure valid payload
+        PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
         echo "📋 Project data being sent:"
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \
