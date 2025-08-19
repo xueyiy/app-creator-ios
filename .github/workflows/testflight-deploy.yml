@@ -72,6 +72,14 @@ jobs:
           BUILD_NUMBER=$(date +%s)
           USE_PROJECT_DATA=true
           echo "🔄 Generated fresh build number: $BUILD_NUMBER (ignoring any existing buildNumber)"
+          
+          # Auto-enable backend fetching if projectId is present
+          PROJECT_ID=$(echo "$PROJECT_DATA" | jq -r '.projectId // empty')
+          if [ -n "$PROJECT_ID" ] && [ "$PROJECT_ID" != "null" ]; then
+            echo "🔍 Project ID detected: $PROJECT_ID - enabling backend fetch"
+            PROJECT_DATA=$(echo "$PROJECT_DATA" | jq '. + {fetchFromBackend: true}')
+            echo "✅ Updated project data to fetch from backend"
+          fi
         else
           echo "📱 Using manual inputs for app configuration"
           # Use manual inputs but generate fresh build number
