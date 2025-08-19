@@ -120,6 +120,8 @@ jobs:
         fi
         
         echo "🌐 Using backend URL: $BACKEND_URL"
+        echo "📋 Project data being sent:"
+        echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \
           -H "Content-Type: application/json" \
           -d "$PROJECT_DATA" \
@@ -128,6 +130,15 @@ jobs:
         # Extract the generated app
         echo "📦 Extracting generated Flutter app..."
         unzip -o app_package.zip
+        
+        # Quick check of generated code
+        echo "🔍 Quick check of generated main.dart:"
+        if [ -f lib/main.dart ]; then
+          echo "✅ main.dart exists"
+          grep -n "primarySwatch\|ColorScheme.fromSeed\|toolbarHeight" lib/main.dart | head -5 || echo "No theme/appbar matches found"
+        else
+          echo "❌ main.dart not found"
+        fi
 
         # Ensure ios/Runner/Info.plist has the correct version and build number
         echo "🔧 Ensuring ios/Runner/Info.plist has correct MARKETING_VERSION and CURRENT_PROJECT_VERSION..."
