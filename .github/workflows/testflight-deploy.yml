@@ -148,17 +148,16 @@ jobs:
           ls -la || true
         fi
 
-        # Upload generated source for post-run inspection
-        echo "📤 Uploading generated Flutter source (debug)"
+        # Prepare generated source archive for upload in next step
+        echo "📤 Preparing generated Flutter source (debug)"
         tar -czf generated-flutter-source.tgz lib ios pubspec.yaml app_config.json 2>/dev/null || true
         echo "generated-flutter-source.tgz" >> $GITHUB_OUTPUT
-
-      - name: Upload generated Flutter source (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-flutter-source
-          path: flutter_project/generated-flutter-source.tgz
-          if-no-files-found: ignore
+    - name: Upload generated Flutter source (debug)
+      uses: actions/upload-artifact@v4
+      with:
+        name: generated-flutter-source
+        path: flutter_project/generated-flutter-source.tgz
+        if-no-files-found: ignore
 
         # Ensure ios/Runner/Info.plist has the correct version and build number
         echo "🔧 Ensuring ios/Runner/Info.plist has correct MARKETING_VERSION and CURRENT_PROJECT_VERSION..."
