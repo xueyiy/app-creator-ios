@@ -727,6 +727,7 @@ class HomeScreen extends StatelessWidget {
     const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
     const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
     const appHeaderTitlePercent = appHeaderComponent?.responsive?.titleFontPercent;
+    const appHeaderHeight = Math.max(parseFloat(appHeaderComponent?.props?.height) || 64, 44);
     const appHeaderFontSize = appHeaderTitlePercent !== undefined
       ? `MediaQuery.of(context).size.width * ${appHeaderTitlePercent}`
       : (appHeaderComponent?.props?.fontSize || 20);
@@ -757,7 +758,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: ${this.parseColorToFlutter(appHeaderBgColor)}),
-        scaffoldBackgroundColor: ${this.parseColorToFlutter(backgroundColor)},
+        // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
+        scaffoldBackgroundColor: ${(appHeaderComponent ? `((${JSON.stringify('${backgroundColor}')} == ${JSON.stringify('${appHeaderBgColor}')}) ? Colors.white : ${this.parseColorToFlutter(backgroundColor)})` : this.parseColorToFlutter(backgroundColor))},
       ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -770,6 +772,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       ${appHeaderComponent ? `appBar: AppBar(
+        toolbarHeight: ${appHeaderHeight},
         title: Text(
           '${appTitle}',
           style: TextStyle(
@@ -797,8 +800,10 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            // Force full-viewport canvas so coordinates map 1:1 to device size
             return Stack(
               fit: StackFit.expand,
+              clipBehavior: Clip.none,
               children: [
 ${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).filter(Boolean).join(',\n')}
               ],
@@ -899,13 +904,23 @@ ${indent}  child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), indent + 
 ${indent})`;
     }
 
-    // Legacy pixel-based positioning
-    return `${indent}Positioned(
-${indent}  left: ${position.x || 0}.0,
-${indent}  top: ${position.y || 0}.0,
-${indent}  width: ${size.width || 100}.0,
-${indent}  height: ${size.height || 30}.0,
-${indent}  child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), indent + '  ')},
+    // Legacy pixel-based positioning: scale from a 360x720 design space
+    const pxLeft = (position.x || 0);
+    const pxTop = (position.y || 0);
+    const pxWidth = (size.width || 100);
+    const pxHeight = (size.height || 30);
+    return `${indent}LayoutBuilder(
+${indent}  builder: (context, constraints) {
+${indent}    final double sx = constraints.maxWidth / 360.0;
+${indent}    final double sy = constraints.maxHeight / 720.0;
+${indent}    return Positioned(
+${indent}      left: ${pxLeft} * sx,
+${indent}      top: ${pxTop} * sy,
+${indent}      width: ${pxWidth} * sx,
+${indent}      height: ${pxHeight} * sy,
+${indent}      child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), indent + '      ')},
+${indent}    );
+${indent}  },
 ${indent})`;
   }
 
