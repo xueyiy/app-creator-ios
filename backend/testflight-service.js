@@ -734,6 +734,8 @@ class HomeScreen extends StatelessWidget {
     const positionedComponents = components.filter(c => c.type !== 'AppHeader');
     
     console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName} (absoluteLayout=${useAbsoluteLayout})`);
+    console.log(`📋 Component types in positioned components: ${positionedComponents.map(c => c.type).join(', ')}`);
+    console.log(`📋 AppHeader component found: ${!!appHeaderComponent}, will render in Scaffold AppBar: ${!!appHeaderComponent}`);
 
     return `import 'package:flutter/material.dart';
 
@@ -792,7 +794,7 @@ class HomeScreen extends StatelessWidget {
             return Stack(
               fit: StackFit.expand,
               children: [
-${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).join(',\n')}
+${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).filter(Boolean).join(',\n')}
               ],
             );
           },
@@ -851,7 +853,8 @@ ${positionedComponents.map(component => this.generateComponentWidget(component, 
         break;
       case 'AppHeader':
         // AppHeader should not be positioned, it's handled by Scaffold appBar
-        return this.generateAppHeaderWidget(props, indent);
+        // Return empty widget since it's rendered in the AppBar
+        return null;
       default:
         widgetCode = `${indent}Container(
 ${indent}  child: Text('${type}'),
