@@ -77,7 +77,8 @@ jobs:
           PROJECT_ID=$(echo "$PROJECT_DATA" | jq -r '.projectId // empty')
           if [ -n "$PROJECT_ID" ] && [ "$PROJECT_ID" != "null" ]; then
             echo "🔍 Project ID detected: $PROJECT_ID - enabling backend fetch"
-            PROJECT_DATA=$(echo "$PROJECT_DATA" | jq '. + {fetchFromBackend: true}')
+            # Overwrite any local template/screens to force backend fetch
+            PROJECT_DATA=$(echo "$PROJECT_DATA" | jq '. + {fetchFromBackend: true} | del(.template.screens) | del(.template.content)')
             echo "✅ Updated project data to fetch from backend"
           fi
         else
@@ -127,8 +128,11 @@ jobs:
         fi
         
         echo "🌐 Using backend URL: $BACKEND_URL"
-        # Compact JSON to avoid quoting issues and ensure valid payload
+        # Compact JSON to avoid quoting issues and ensure valid payload; pass firebaseBaseUrl so backend can reach DB
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
+        if [ -n "$BACKEND_URL" ]; then
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg fb "$BACKEND_URL" '. + {firebaseBaseUrl: $fb}')
+        fi
         echo "📋 Project data being sent:"
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \

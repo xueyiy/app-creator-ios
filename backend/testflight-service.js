@@ -460,7 +460,7 @@ class TestFlightService {
       console.log(`   🔧 Node Version: ${process.version}`);
       console.log(`   💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
       
-      const { templateId, projectId, template, deploymentInfo, pageId, firebaseToken, fetchFromBackend } = projectData;
+      const { templateId, projectId, template, deploymentInfo, pageId, firebaseToken, fetchFromBackend, firebaseBaseUrl } = projectData;
       
       console.log('📋 Project Data Summary:');
       console.log('  - Template ID:', templateId);
@@ -496,7 +496,7 @@ class TestFlightService {
 
       // Optionally fetch latest JSON from backend by project/page id
       if (fetchFromBackend || processedScreens.length === 0) {
-        const fetched = await this.tryFetchScreensFromBackend({ projectId, pageId, firebaseToken });
+        const fetched = await this.tryFetchScreensFromBackend({ projectId, pageId, firebaseToken, firebaseBaseUrl });
         if (fetched && fetched.length > 0) {
           console.log(`🌐 Using screens fetched from backend: ${fetched.length}`);
           processedScreens = fetched;
@@ -659,10 +659,10 @@ flutter:
   }
 
   // Try to fetch current screen JSON(s) from backend by projectId/pageId
-  async tryFetchScreensFromBackend({ projectId, pageId, firebaseToken }) {
+  async tryFetchScreensFromBackend({ projectId, pageId, firebaseToken, firebaseBaseUrl }) {
     try {
       const screens = [];
-      const baseUrl = process.env.FIREBASE_API_BASE_URL || 'http://10.80.7.189:3200';
+      const baseUrl = firebaseBaseUrl || process.env.FIREBASE_API_BASE_URL || 'http://10.80.7.189:3200';
       const headers = { 'Content-Type': 'application/json' };
       if (firebaseToken) headers['Access-Token'] = firebaseToken;
 
