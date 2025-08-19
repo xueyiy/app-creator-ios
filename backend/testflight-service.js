@@ -719,7 +719,10 @@ class HomeScreen extends StatelessWidget {
     const useAbsoluteLayout = this.shouldUseAbsoluteLayout(components);
     
     // Find AppHeader (used in either strategy)
-    const appHeaderComponent = components.find(c => c.type === 'AppHeader');
+    const appHeaderComponent = components.find(c => {
+      const t = (c.type || '').toLowerCase();
+      return t === 'appheader' || t === 'appbar' || t === 'header' || t === 'topbar';
+    });
     const appTitle = appHeaderComponent?.props?.appTitle || appConfig.appName || 'Generated App';
     const appHeaderBgColor = appHeaderComponent?.props?.backgroundColor || '#3b82f6';
     const appHeaderTextColor = appHeaderComponent?.props?.titleColor || '#ffffff';
@@ -730,8 +733,11 @@ class HomeScreen extends StatelessWidget {
     const showBackButton = appHeaderComponent?.props?.showBackButton || false;
     const showMenuButton = appHeaderComponent?.props?.showMenuButton || false;
     
-    // Always exclude AppHeader from positioned components; render via Scaffold.appBar
-    const positionedComponents = components.filter(c => c.type !== 'AppHeader');
+    // Always exclude AppHeader-like components; render via Scaffold.appBar
+    const positionedComponents = components.filter(c => {
+      const t = (c.type || '').toLowerCase();
+      return !(t === 'appheader' || t === 'appbar' || t === 'header' || t === 'topbar');
+    });
     
     console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName} (absoluteLayout=${useAbsoluteLayout})`);
     console.log(`📋 Component types in positioned components: ${positionedComponents.map(c => c.type).join(', ')}`);
