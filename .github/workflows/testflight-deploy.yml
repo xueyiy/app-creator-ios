@@ -129,6 +129,37 @@ jobs:
         echo "📦 Extracting generated Flutter app..."
         unzip -o app_package.zip
 
+        # Debug: Inspect generated Dart to verify generator version
+        echo "🔍 Inspecting generated Dart (lib/main.dart)"
+        if [ -f lib/main.dart ]; then
+          echo "--- First 120 lines of lib/main.dart ---"
+          head -120 lib/main.dart | sed -e 's/\t/  /g'
+          echo "--- Checks ---"
+          if grep -q "primarySwatch" lib/main.dart; then
+            echo "❗ Detected primarySwatch in theme (old generator)"
+          else
+            echo "✅ No primarySwatch (new generator expected)"
+          fi
+          grep -n "ColorScheme.fromSeed" lib/main.dart || true
+          grep -n "AppBar\(" lib/main.dart || true
+          grep -n "toolbarHeight" lib/main.dart || true
+        else
+          echo "❌ lib/main.dart not found after unzip"
+          ls -la || true
+        fi
+
+        # Upload generated source for post-run inspection
+        echo "📤 Uploading generated Flutter source (debug)"
+        tar -czf generated-flutter-source.tgz lib ios pubspec.yaml app_config.json 2>/dev/null || true
+        echo "generated-flutter-source.tgz" >> $GITHUB_OUTPUT
+
+      - name: Upload generated Flutter source (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-flutter-source
+          path: flutter_project/generated-flutter-source.tgz
+          if-no-files-found: ignore
+
         # Ensure ios/Runner/Info.plist has the correct version and build number
         echo "🔧 Ensuring ios/Runner/Info.plist has correct MARKETING_VERSION and CURRENT_PROJECT_VERSION..."
         if [ -f ios/Runner/Info.plist ]; then

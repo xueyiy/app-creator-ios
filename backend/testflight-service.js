@@ -450,6 +450,7 @@ class TestFlightService {
   // Package Flutter app source code only (for GitHub Actions)
   async packageFlutterAppSourceOnly(projectData) {
     try {
+      console.log('🚨🚨🚨 DEBUG: packageFlutterAppSourceOnly called! 🚨🚨🚨');
       console.log('='.repeat(80));
       console.log('📦 FLUTTER SOURCE PACKAGING STARTED (GitHub Actions)');
       console.log('='.repeat(80));
@@ -710,6 +711,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   generateMainDartFromComponents(appConfig, screenData) {
+    console.log('🚨 DEBUG: generateMainDartFromComponents called!');
+    console.log('🚨 DEBUG: appConfig:', JSON.stringify(appConfig, null, 2));
+    console.log('🚨 DEBUG: screenData:', JSON.stringify(screenData, null, 2));
+    
     const components = screenData.components || [];
     const screenProperties = screenData.screenProperties || {};
     const screenName = screenData.screenName || 'home';
