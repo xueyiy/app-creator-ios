@@ -77,9 +77,15 @@ jobs:
           PROJECT_ID=$(echo "$PROJECT_DATA" | jq -r '.projectId // empty')
           if [ -n "$PROJECT_ID" ] && [ "$PROJECT_ID" != "null" ]; then
             echo "🔍 Project ID detected: $PROJECT_ID - enabling backend fetch"
-            # Overwrite any local template/screens to force backend fetch
-            PROJECT_DATA=$(echo "$PROJECT_DATA" | jq '. + {fetchFromBackend: true} | del(.template.screens) | del(.template.content)')
-            echo "✅ Updated project data to fetch from backend"
+            # Create minimal project data to force backend fetch (strip all local template data)
+            PROJECT_DATA=$(echo "$PROJECT_DATA" | jq '{
+              templateId: .templateId,
+              projectId: .projectId,
+              deploymentInfo: .deploymentInfo,
+              fetchFromBackend: true
+            }')
+            echo "✅ Stripped local template data and enabled backend fetch"
+            echo "🔍 Minimal project data after stripping: $(echo "$PROJECT_DATA" | jq -c .)"
           fi
         else
           echo "📱 Using manual inputs for app configuration"
