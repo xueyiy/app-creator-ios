@@ -141,12 +141,20 @@ jobs:
         # Add Firebase service token and correct Firebase base URL to project data
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
         
-        # Add Firebase service token for authentication
-        if [ -n "$FIREBASE_SERVICE_TOKEN" ]; then
-          echo "🔑 Adding Firebase service token for backend authentication"
+        # Add Firebase authentication token (prioritize user token from frontend)
+        USER_TOKEN=$(echo "$PROJECT_DATA" | jq -r '.userFirebaseToken // empty')
+        if [ -n "$USER_TOKEN" ] && [ "$USER_TOKEN" != "null" ]; then
+          echo "🔑 Using user Firebase token from frontend for backend authentication"
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$USER_TOKEN" '. + {firebaseToken: $token}')
+          # Remove the userFirebaseToken field to avoid duplication
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq 'del(.userFirebaseToken)')
+        elif [ -n "$FIREBASE_SERVICE_TOKEN" ]; then
+          echo "🔑 Using service token as fallback for backend authentication"
           PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$FIREBASE_SERVICE_TOKEN" '. + {firebaseToken: $token}')
         else
-          echo "⚠️  Warning: No FIREBASE_SERVICE_TOKEN provided - backend may not be able to fetch project data"
+          echo "⚠️  Warning: No authentication token provided - backend may not be able to fetch project data"
+          echo "   - User token from frontend: ${USER_TOKEN:-MISSING}"
+          echo "   - Service token from secrets: ${FIREBASE_SERVICE_TOKEN:-MISSING}"
         fi
         
         # Set correct Firebase API base URL (different from backend URL)
