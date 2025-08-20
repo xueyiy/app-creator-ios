@@ -128,6 +128,9 @@ jobs:
           BACKEND_URL='${{ github.event.inputs.backend_url }}'
         fi
         
+        # Set Firebase service token for backend authentication
+        export FIREBASE_SERVICE_TOKEN='${{ secrets.FIREBASE_SERVICE_TOKEN }}'
+        
         if [ -z "$BACKEND_URL" ]; then
           echo "❌ No backend URL provided! Please set BACKEND_URL secret or provide backend_url input"
           exit 1

@@ -663,55 +663,145 @@ flutter:
     try {
       const screens = [];
       const baseUrl = firebaseBaseUrl || process.env.FIREBASE_API_BASE_URL || 'http://10.80.7.189:3200';
-      const headers = { 'Content-Type': 'application/json' };
-      if (firebaseToken) headers['Access-Token'] = firebaseToken;
+      
+      console.log(`🔑 Using firebaseToken: ${firebaseToken ? 'PROVIDED' : 'MISSING'}`);
+      console.log(`🌐 Using baseUrl: ${baseUrl}`);
 
-      // If pageId provided, fetch single page JSON
+      // If pageId provided, fetch single page JSON (no auth required)
       if (pageId) {
         const url = `${baseUrl}/project/pages/${pageId}`;
         console.log(`🌐 Fetching page JSON for packaging: ${url}`);
-        const res = await fetch(url, { method: 'GET', headers });
+        const res = await fetch(url, { 
+          method: 'GET', 
+          headers: { 'Content-Type': 'application/json' } // No auth for pages endpoint
+        });
         if (res.ok) {
           const data = await res.json();
+          console.log(`📄 Page data received:`, {
+            hasJson: !!data?.json,
+            componentsCount: data?.json?.components?.length || 0,
+            pageId: data?.id
+          });
           if (data?.json) {
             screens.push({
-              screenName: data.json.screenName || 'home',
-              originalName: data.json.originalName || 'Home',
+              screenName: data.json.screenName || data.filename?.replace('.json', '') || 'home',
+              originalName: data.json.originalName || data.filename?.replace('.json', '') || 'Home',
               components: data.json.components || [],
               screenProperties: data.json.screenProperties || {},
               metadata: data.json.metadata || {}
             });
           }
         } else {
-          console.log(`⚠️  Failed to fetch page JSON: ${res.status}`);
+          console.log(`⚠️  Failed to fetch page JSON: ${res.status} ${res.statusText}`);
+          const errorText = await res.text().catch(() => 'No error details');
+          console.log(`⚠️  Error details: ${errorText}`);
         }
       }
 
-      // If projectId provided and no pageId, fetch pages list and then first page JSON
+      // If projectId provided and no pageId, fetch project details first, then pages
       if (screens.length === 0 && projectId) {
-        const listUrl = `${baseUrl}/project/${projectId}/pages`;
-        console.log(`🌐 Fetching project pages for packaging: ${listUrl}`);
-        const res = await fetch(listUrl, { method: 'GET', headers });
-        if (res.ok) {
-          const pages = await res.json();
-          const first = Array.isArray(pages) ? pages[0] : null;
-          if (first?.id) {
-            const pageUrl = `${baseUrl}/project/pages/${first.id}`;
+        // Try multiple approaches to get project pages
+        let projectData = null;
+        
+        // Approach 1: Try with provided firebaseToken
+        if (firebaseToken) {
+          console.log(`🌐 Approach 1: Fetching project details with user token`);
+          const projectUrl = `${baseUrl}/project/${projectId}`;
+          const projectHeaders = { 
+            'Content-Type': 'application/json',
+            'Access-Token': firebaseToken
+          };
+          
+          const projectRes = await fetch(projectUrl, { method: 'GET', headers: projectHeaders });
+          if (projectRes.ok) {
+            projectData = await projectRes.json();
+            console.log(`✅ Project data received via user token:`, {
+              projectId: projectData?.id,
+              pagesCount: projectData?.pages?.length || 0,
+              projectName: projectData?.name
+            });
+          } else {
+            console.log(`⚠️  Failed with user token: ${projectRes.status} ${projectRes.statusText}`);
+            const errorText = await projectRes.text().catch(() => 'No error details');
+            console.log(`⚠️  User token error details: ${errorText}`);
+          }
+        }
+        
+        // Approach 2: Try with service account token (if available)
+        if (!projectData && process.env.FIREBASE_SERVICE_TOKEN) {
+          console.log(`🌐 Approach 2: Fetching project details with service token`);
+          const projectUrl = `${baseUrl}/project/${projectId}`;
+          const serviceHeaders = { 
+            'Content-Type': 'application/json',
+            'Access-Token': process.env.FIREBASE_SERVICE_TOKEN
+          };
+          
+          const projectRes = await fetch(projectUrl, { method: 'GET', headers: serviceHeaders });
+          if (projectRes.ok) {
+            projectData = await projectRes.json();
+            console.log(`✅ Project data received via service token:`, {
+              projectId: projectData?.id,
+              pagesCount: projectData?.pages?.length || 0,
+              projectName: projectData?.name
+            });
+          } else {
+            console.log(`⚠️  Failed with service token: ${projectRes.status} ${projectRes.statusText}`);
+            const errorText = await projectRes.text().catch(() => 'No error details');
+            console.log(`⚠️  Service token error details: ${errorText}`);
+          }
+        }
+        
+        // If we still don't have project data, log the authentication issue
+        if (!projectData) {
+          console.log(`❌ Could not fetch project data - authentication required`);
+          console.log(`   Available authentication methods:`);
+          console.log(`   - User token: ${firebaseToken ? 'PROVIDED' : 'MISSING'}`);
+          console.log(`   - Service token: ${process.env.FIREBASE_SERVICE_TOKEN ? 'AVAILABLE' : 'MISSING'}`);
+          console.log(`   Endpoint requires Firebase ID token in Authorization header`);
+        }
+        
+        // Now fetch the actual page content if we have project data
+        if (projectData?.pages && projectData.pages.length > 0) {
+          const firstPage = projectData.pages[0];
+          if (firstPage?.id) {
+            const pageUrl = `${baseUrl}/project/pages/${firstPage.id}`;
             console.log(`🌐 Fetching first page JSON: ${pageUrl}`);
-            const pageRes = await fetch(pageUrl, { method: 'GET', headers });
+            
+            const pageRes = await fetch(pageUrl, { 
+              method: 'GET', 
+              headers: { 'Content-Type': 'application/json' } // No auth for pages endpoint
+            });
+            
             if (pageRes.ok) {
-              const page = await pageRes.json();
-              if (page?.json) {
+              const pageData = await pageRes.json();
+              console.log(`📄 Page JSON received:`, {
+                hasJson: !!pageData?.json,
+                componentsCount: pageData?.json?.components?.length || 0,
+                filename: pageData?.filename
+              });
+              
+              if (pageData?.json) {
                 screens.push({
-                  screenName: page.json.screenName || 'home',
-                  originalName: page.json.originalName || 'Home',
-                  components: page.json.components || [],
-                  screenProperties: page.json.screenProperties || {},
-                  metadata: page.json.metadata || {}
+                  screenName: pageData.json.screenName || pageData.filename?.replace('.json', '') || 'home',
+                  originalName: pageData.json.originalName || pageData.filename?.replace('.json', '') || 'Home',
+                  components: pageData.json.components || [],
+                  screenProperties: pageData.json.screenProperties || {},
+                  metadata: pageData.json.metadata || {}
                 });
               }
+            } else {
+              console.log(`⚠️  Failed to fetch page JSON: ${pageRes.status} ${pageRes.statusText}`);
+              const errorText = await pageRes.text().catch(() => 'No error details');
+              console.log(`⚠️  Page error details: ${errorText}`);
             }
+          } else {
+            console.log(`⚠️  No pages found in project or missing page ID`);
           }
+        } else {
+          console.log(`❌ Could not access project data with any available method`);
+          console.log(`   - User token: ${firebaseToken ? 'PROVIDED' : 'MISSING'}`);
+          console.log(`   - Service token: ${process.env.FIREBASE_SERVICE_TOKEN ? 'AVAILABLE' : 'MISSING'}`);
+          console.log(`   - Consider setting FIREBASE_SERVICE_TOKEN environment variable for GitHub Actions`);
         }
       }
 
@@ -719,11 +809,19 @@ flutter:
       if (screens.length > 0) {
         screens.forEach((s, i) => {
           console.log(`✅ Backend screen ${i + 1}: ${s.screenName} (${(s.components || []).length} components)`);
+          // Log first component for debugging
+          if (s.components && s.components.length > 0) {
+            const firstComponent = s.components[0];
+            console.log(`   Component sample: ${firstComponent.type} with responsive: ${JSON.stringify(firstComponent.responsive)}`);
+          }
         });
+      } else {
+        console.log(`❌ No screens fetched from backend for projectId: ${projectId}, pageId: ${pageId}`);
       }
       return screens;
     } catch (err) {
       console.log('⚠️  Error fetching screens from backend:', err.message);
+      console.log('⚠️  Stack trace:', err.stack);
       return [];
     }
   }
