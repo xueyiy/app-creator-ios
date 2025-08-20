@@ -137,11 +137,22 @@ jobs:
         fi
         
         echo "🌐 Using backend URL: $BACKEND_URL"
-        # Compact JSON to avoid quoting issues and ensure valid payload; pass firebaseBaseUrl so backend can reach DB
+        
+        # Add Firebase service token and correct Firebase base URL to project data
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
-        if [ -n "$BACKEND_URL" ]; then
-          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg fb "$BACKEND_URL" '. + {firebaseBaseUrl: $fb}')
+        
+        # Add Firebase service token for authentication
+        if [ -n "$FIREBASE_SERVICE_TOKEN" ]; then
+          echo "🔑 Adding Firebase service token for backend authentication"
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$FIREBASE_SERVICE_TOKEN" '. + {firebaseToken: $token}')
+        else
+          echo "⚠️  Warning: No FIREBASE_SERVICE_TOKEN provided - backend may not be able to fetch project data"
         fi
+        
+        # Set correct Firebase API base URL (different from backend URL)
+        FIREBASE_API_URL="${FIREBASE_API_BASE_URL:-http://10.80.7.189:3200}"
+        echo "🌐 Using Firebase API URL: $FIREBASE_API_URL"
+        PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg fb "$FIREBASE_API_URL" '. + {firebaseBaseUrl: $fb}')
         echo "📋 Project data being sent:"
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \

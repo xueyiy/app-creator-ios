@@ -666,6 +666,8 @@ flutter:
       
       console.log(`🔑 Using firebaseToken: ${firebaseToken ? 'PROVIDED' : 'MISSING'}`);
       console.log(`🌐 Using baseUrl: ${baseUrl}`);
+      console.log(`📋 Input parameters: projectId=${projectId}, pageId=${pageId}`);
+      console.log(`🔧 Environment tokens: FIREBASE_SERVICE_TOKEN=${process.env.FIREBASE_SERVICE_TOKEN ? 'SET' : 'NOT_SET'}`);
 
       // If pageId provided, fetch single page JSON (no auth required)
       if (pageId) {
@@ -712,6 +714,9 @@ flutter:
             'Access-Token': firebaseToken
           };
           
+          console.log(`📡 Making request to: ${projectUrl}`);
+          console.log(`🔑 Request headers: ${JSON.stringify(projectHeaders, null, 2)}`);
+          
           const projectRes = await fetch(projectUrl, { method: 'GET', headers: projectHeaders });
           if (projectRes.ok) {
             projectData = await projectRes.json();
@@ -724,7 +729,10 @@ flutter:
             console.log(`⚠️  Failed with user token: ${projectRes.status} ${projectRes.statusText}`);
             const errorText = await projectRes.text().catch(() => 'No error details');
             console.log(`⚠️  User token error details: ${errorText}`);
+            console.log(`⚠️  Response headers: ${JSON.stringify(Object.fromEntries(projectRes.headers.entries()), null, 2)}`);
           }
+        } else {
+          console.log(`⚠️  Skipping Approach 1: No firebaseToken provided`);
         }
         
         // Approach 2: Try with service account token (if available)
@@ -735,6 +743,9 @@ flutter:
             'Content-Type': 'application/json',
             'Access-Token': process.env.FIREBASE_SERVICE_TOKEN
           };
+          
+          console.log(`📡 Making request to: ${projectUrl}`);
+          console.log(`🔑 Request headers: ${JSON.stringify(serviceHeaders, null, 2)}`);
           
           const projectRes = await fetch(projectUrl, { method: 'GET', headers: serviceHeaders });
           if (projectRes.ok) {
@@ -748,7 +759,10 @@ flutter:
             console.log(`⚠️  Failed with service token: ${projectRes.status} ${projectRes.statusText}`);
             const errorText = await projectRes.text().catch(() => 'No error details');
             console.log(`⚠️  Service token error details: ${errorText}`);
+            console.log(`⚠️  Response headers: ${JSON.stringify(Object.fromEntries(projectRes.headers.entries()), null, 2)}`);
           }
+        } else {
+          console.log(`⚠️  Skipping Approach 2: No service token available`);
         }
         
         // If we still don't have project data, log the authentication issue
