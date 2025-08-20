@@ -142,8 +142,15 @@ jobs:
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
         
         # Add Firebase authentication token (prioritize user token from frontend)
+        echo "🔍 DEBUG: Checking for user token in project data..."
+        echo "🔍 DEBUG: Full project data keys: $(echo "$PROJECT_DATA" | jq -r 'keys[]' 2>/dev/null || echo 'JSON parse failed')"
+        echo "🔍 DEBUG: userFirebaseToken field exists: $(echo "$PROJECT_DATA" | jq -r 'has("userFirebaseToken")' 2>/dev/null || echo 'false')"
+        
         USER_TOKEN=$(echo "$PROJECT_DATA" | jq -r '.userFirebaseToken // empty')
-        if [ -n "$USER_TOKEN" ] && [ "$USER_TOKEN" != "null" ]; then
+        echo "🔍 DEBUG: Extracted USER_TOKEN: ${USER_TOKEN:-EMPTY}"
+        echo "🔍 DEBUG: USER_TOKEN length: ${#USER_TOKEN}"
+        
+        if [ -n "$USER_TOKEN" ] && [ "$USER_TOKEN" != "null" ] && [ "$USER_TOKEN" != "empty" ]; then
           echo "🔑 Using user Firebase token from frontend for backend authentication"
           PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$USER_TOKEN" '. + {firebaseToken: $token}')
           # Remove the userFirebaseToken field to avoid duplication
