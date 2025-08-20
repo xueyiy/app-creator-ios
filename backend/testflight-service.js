@@ -496,7 +496,13 @@ class TestFlightService {
 
       // Optionally fetch latest JSON from backend by project/page id
       if (fetchFromBackend || processedScreens.length === 0) {
-        const fetched = await this.tryFetchScreensFromBackend({ projectId, pageId, firebaseToken, firebaseBaseUrl });
+        const fetched = await this.tryFetchScreensFromBackend({ 
+          projectId, 
+          pageId, 
+          firebaseToken, 
+          firebaseBaseUrl,
+          preloadedFirebaseData: projectData.preloadedFirebaseData
+        });
         if (fetched && fetched.length > 0) {
           console.log(`🌐 Using screens fetched from backend: ${fetched.length}`);
           processedScreens = fetched;
@@ -659,9 +665,50 @@ flutter:
   }
 
   // Try to fetch current screen JSON(s) from backend by projectId/pageId
-  async tryFetchScreensFromBackend({ projectId, pageId, firebaseToken, firebaseBaseUrl }) {
+  async tryFetchScreensFromBackend({ projectId, pageId, firebaseToken, firebaseBaseUrl, preloadedFirebaseData }) {
     try {
       const screens = [];
+      
+      // PRIORITY 1: Use preloaded Firebase data if available (to avoid private IP issue)
+      if (preloadedFirebaseData && preloadedFirebaseData.screensData) {
+        console.log(`🎯 Using preloaded Firebase data to avoid private IP issue`);
+        console.log(`📊 Preloaded screens available: ${preloadedFirebaseData.screensData.length}`);
+        
+        for (const screenData of preloadedFirebaseData.screensData) {
+          if (screenData.jsonData && screenData.jsonData.components) {
+            console.log(`✅ Processing preloaded screen: ${screenData.filename}`);
+            console.log(`📊 Components found: ${screenData.jsonData.components.length}`);
+            
+            // Convert to screen format expected by the app generator
+            const screen = {
+              screenName: screenData.filename ? screenData.filename.replace('.json', '') : 'screen',
+              originalName: screenData.filename ? screenData.filename.replace('.json', '') : 'Screen',
+              version: screenData.jsonData.version || '1.0',
+              components: screenData.jsonData.components || [],
+              screenProperties: screenData.jsonData.screenProperties || { backgroundColor: '#ffffff' },
+              metadata: screenData.jsonData.metadata || { 
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                totalComponents: (screenData.jsonData.components || []).length,
+                source: 'Preloaded Firebase data'
+              }
+            };
+            
+            screens.push(screen);
+            console.log(`🎯 Preloaded screen data prepared for app generation`);
+          } else {
+            console.log(`⚠️ Preloaded screen missing components: ${screenData.filename}`);
+          }
+        }
+        
+        if (screens.length > 0) {
+          console.log(`✅ Successfully used preloaded data: ${screens.length} screens`);
+          return screens;
+        }
+      }
+      
+      // PRIORITY 2: Fallback to API fetching (original logic)
+      console.log(`🌐 Falling back to Firebase API fetching...`);
       const baseUrl = firebaseBaseUrl || process.env.FIREBASE_API_BASE_URL || 'http://10.80.7.189:3200';
       
       console.log(`🔑 Using firebaseToken: ${firebaseToken ? 'PROVIDED' : 'MISSING'}`);

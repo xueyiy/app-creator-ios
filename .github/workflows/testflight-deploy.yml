@@ -182,6 +182,10 @@ jobs:
         echo "📋 Final project data being sent:"
         echo "🔍 DEBUG: Final project data keys: $(echo "$PROJECT_DATA" | jq -r 'keys[]' 2>/dev/null || echo 'JSON parse failed')"
         echo "🔍 DEBUG: firebaseToken present in final data: $(echo "$PROJECT_DATA" | jq -r 'has("firebaseToken")' 2>/dev/null || echo 'false')"
+        echo "🔍 DEBUG: preloadedFirebaseData present: $(echo "$PROJECT_DATA" | jq -r 'has("preloadedFirebaseData")' 2>/dev/null || echo 'false')"
+        if [ "$(echo "$PROJECT_DATA" | jq -r 'has("preloadedFirebaseData")' 2>/dev/null)" = "true" ]; then
+          echo "🔍 DEBUG: preloaded screens count: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData | length' 2>/dev/null || echo '0')"
+        fi
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \
           -H "Content-Type: application/json" \
