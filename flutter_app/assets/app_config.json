@@ -1,175 +1,109 @@
 {
-  "appName": "AI Project - 7d680896-a812-4c15-8165-02278db32ffe",
+  "appName": "AI Project - bcfe19f8-9950-4e32-97c1-6d779d695d3d",
   "bundleId": "com.visios.nocode",
   "screens": [
     {
-      "screenName": "Home",
-      "originalName": "Home",
+      "screenName": "H",
+      "originalName": "H",
       "components": [
         {
-          "id": "component_1697048400000",
-          "type": "AppHeader",
-          "name": "App Header",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
+          "id": "component_1755702814071",
+          "name": "Heading",
           "size": {
-            "width": 270,
-            "height": 70
-          },
-          "layer": 1,
-          "props": {
-            "appTitle": "Travel Explorer",
-            "fontSize": 24,
-            "titleColor": "#ffffff",
-            "borderRadius": "0px",
-            "showBackButton": false,
-            "showMenuButton": true,
-            "backgroundColor": "#3b82f6"
-          },
-          "metadata": {
-            "createdAt": "2023-10-11T12:00:00Z",
-            "updatedAt": "2025-08-19T21:14:46.525Z"
-          }
-        },
-        {
-          "id": "component_1697048460000",
-          "type": "Heading",
-          "name": "Welcome Heading",
-          "position": {
-            "x": 0,
-            "y": 90
-          },
-          "size": {
-            "width": 270,
-            "height": 35
-          },
-          "layer": 2,
-          "props": {
-            "text": "Explore Your Next Destination",
-            "color": "#1f2937",
-            "padding": "8px",
-            "fontSize": 24,
-            "textAlign": "center",
-            "fontWeight": "600",
-            "backgroundColor": "transparent"
-          },
-          "metadata": {
-            "createdAt": "2023-10-11T12:01:00Z",
-            "updatedAt": "2025-08-19T21:14:46.525Z"
-          }
-        },
-        {
-          "id": "component_1697048520000",
-          "type": "Input",
-          "name": "Search Input",
-          "position": {
-            "x": 0,
-            "y": 145
-          },
-          "size": {
-            "width": 270,
-            "height": 45
-          },
-          "layer": 3,
-          "props": {
-            "value": "",
-            "padding": "12",
-            "pattern": "",
-            "disabled": false,
-            "fontSize": "14",
-            "iconType": "search",
-            "required": false,
-            "showIcon": true,
-            "iconColor": "#6b7280",
-            "inputType": "text",
-            "maxLength": "",
-            "minLength": "",
-            "textAlign": "left",
-            "textColor": "#111827",
-            "fontWeight": "normal",
-            "borderColor": "#d1d5db",
-            "borderWidth": "1",
-            "placeholder": "Search for destinations...",
-            "borderRadius": "6",
-            "iconPosition": "left",
-            "focusRingColor": "#3b82f6",
-            "backgroundColor": "#ffffff",
-            "placeholderColor": "#9ca3af"
-          },
-          "metadata": {
-            "createdAt": "2023-10-11T12:02:00Z",
-            "updatedAt": "2025-08-19T21:14:46.525Z"
-          }
-        },
-        {
-          "id": "component_1697048580000",
-          "type": "ImageCarousel",
-          "name": "Travel Image Carousel",
-          "position": {
-            "x": 0,
-            "y": 210
-          },
-          "size": {
-            "width": 270,
-            "height": 180
-          },
-          "layer": 4,
-          "props": {
-            "images": [
-              "https://picsum.photos/id/1015/400/300",
-              "https://picsum.photos/id/1016/400/300",
-              "https://picsum.photos/id/1018/400/300"
-            ],
-            "autoPlay": true,
-            "showDots": true,
-            "objectFit": "cover",
-            "showArrows": true,
-            "borderRadius": "12px"
-          },
-          "metadata": {
-            "createdAt": "2023-10-11T12:03:00Z",
-            "updatedAt": "2025-08-19T21:14:46.525Z"
-          }
-        },
-        {
-          "id": "component_1697048640000",
-          "type": "TabBar",
-          "name": "Main Navigation TabBar",
-          "position": {
-            "x": 0,
-            "y": 620
-          },
-          "size": {
-            "width": 270,
+            "width": 150,
             "height": 50
           },
-          "layer": 5,
+          "type": "Heading",
+          "layer": 1,
           "props": {
-            "tabs": [
-              "Home",
-              "Search",
-              "Profile"
-            ],
-            "fontSize": 14,
-            "iconSize": 20,
-            "position": "relative",
-            "tabIcons": [
-              "home",
-              "search",
-              "profile"
-            ],
-            "activeTab": 0,
-            "activeColor": "#3b82f6",
-            "borderColor": "#e5e7eb",
-            "borderRadius": "0px",
-            "inactiveColor": "#6b7280",
-            "backgroundColor": "#ffffff"
+            "text": "Heading",
+            "color": "#1f2937",
+            "level": "h6",
+            "fontStyle": "normal",
+            "fontFamily": "inherit",
+            "fontWeight": "bold",
+            "lineHeight": "normal",
+            "letterSpacing": "normal",
+            "textTransform": "none",
+            "textDecoration": "none"
           },
           "metadata": {
-            "createdAt": "2023-10-11T12:04:00Z",
-            "updatedAt": "2025-08-19T21:14:46.525Z"
+            "createdAt": "2025-08-20T15:15:06.229Z",
+            "updatedAt": "2025-08-20T16:42:26.186Z"
+          },
+          "position": {
+            "x": 70,
+            "y": 260
+          }
+        },
+        {
+          "id": "component_1755702848096",
+          "name": "App Header",
+          "size": {
+            "width": 270,
+            "height": 64
+          },
+          "type": "AppHeader",
+          "layer": 2,
+          "props": {
+            "showAppIcon": false,
+            "backgroundColor": "#c78f8f"
+          },
+          "metadata": {
+            "createdAt": "2025-08-20T16:42:19.065Z",
+            "updatedAt": "2025-08-20T16:42:26.186Z"
+          },
+          "position": {
+            "x": 0,
+            "y": 10
+          }
+        },
+        {
+          "id": "component_1755702853298",
+          "name": "Text",
+          "size": {
+            "width": 100,
+            "height": 40
+          },
+          "type": "Text",
+          "layer": 3,
+          "props": {
+            "text": "Text"
+          },
+          "metadata": {
+            "createdAt": "2025-08-20T15:15:11.655Z",
+            "updatedAt": "2025-08-20T16:42:26.186Z"
+          },
+          "position": {
+            "x": 90,
+            "y": 180
+          }
+        },
+        {
+          "id": "component_1755708143836",
+          "name": "Button",
+          "size": {
+            "width": 100,
+            "height": 40
+          },
+          "type": "Button",
+          "layer": 4,
+          "props": {
+            "text": "Button",
+            "backgroundColor": "#8a97ad"
+          },
+          "position": {
+            "x": 100,
+            "y": 120
+          },
+          "properties": {
+            "backgroundColor": "#8a97ad"
+          },
+          "responsive": {
+            "xPercent": 0.3704,
+            "yPercent": 0.2083,
+            "widthPercent": 0.3704,
+            "heightPercent": 0.0694
           }
         }
       ],
@@ -177,16 +111,20 @@
         "backgroundColor": "#ffffff"
       },
       "metadata": {
-        "createdAt": "2025-08-19T21:11:58.000Z",
-        "updatedAt": "2025-08-19T21:14:28.722Z",
-        "totalComponents": 5
+        "source": "DropCanvas cache",
+        "instanceId": "i5lx25dek",
+        "lastUpdated": "2025-08-20T16:42:32.476Z",
+        "totalComponents": 4,
+        "createdAt": "1970-01-21T07:41:42.808Z",
+        "updatedAt": "1970-01-21T07:41:48.152Z",
+        "pageId": "64ac8af6-d8b0-477d-b851-55b267f43ee6"
       }
     }
   ],
-  "projectId": "7d680896-a812-4c15-8165-02278db32ffe",
+  "projectId": "bcfe19f8-9950-4e32-97c1-6d779d695d3d",
   "templateId": "newProject",
-  "buildTime": "2025-08-19T21:16:56.632Z",
+  "buildTime": "2025-08-20T20:16:29.374Z",
   "appIcon": null,
   "version": "1.0.1",
-  "buildNumber": "1755638086"
+  "buildNumber": "1755720737"
 }

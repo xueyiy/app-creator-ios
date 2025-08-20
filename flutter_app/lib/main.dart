@@ -8,10 +8,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AI Project - 7d680896-a812-4c15-8165-02278db32ffe',
+      title: 'AI Project - bcfe19f8-9950-4e32-97c1-6d779d695d3d',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF3B82F6)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFC78F8F)),
         // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
         scaffoldBackgroundColor: (("${backgroundColor}" == "${appHeaderBgColor}") ? Colors.white : Color(0xFFFFFFFF)),
       ),
@@ -28,23 +28,17 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: 64,
         title: Text(
-          'Travel Explorer',
+          'AI Project - bcfe19f8-9950-4e32-97c1-6d779d695d3d',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 20,
             color: Color(0xFFFFFFFF),
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Color(0xFF3B82F6),
+        backgroundColor: Color(0xFFC78F8F),
         foregroundColor: Color(0xFFFFFFFF),
         elevation: 1,
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {},
-          ),
-        ],
       ),
       backgroundColor: Color(0xFFFFFFFF),
       body: SafeArea(
@@ -60,16 +54,16 @@ class HomeScreen extends StatelessWidget {
                         final double sx = constraints.maxWidth / 360.0;
                         final double sy = constraints.maxHeight / 720.0;
                         return Positioned(
-                          left: 0 * sx,
-                          top: 90 * sy,
-                          width: 270 * sx,
-                          height: 35 * sy,
+                          left: 70 * sx,
+                          top: 260 * sy,
+                          width: 150 * sx,
+                          height: 50 * sy,
                           child:                           Text(
-                            'Explore Your Next Destination',
+                            'Heading',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 16,
                               color: Color(0xFF1F2937),
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         );
@@ -80,45 +74,52 @@ class HomeScreen extends StatelessWidget {
                         final double sx = constraints.maxWidth / 360.0;
                         final double sy = constraints.maxHeight / 720.0;
                         return Positioned(
-                          left: 0 * sx,
-                          top: 145 * sy,
-                          width: 270 * sx,
-                          height: 45 * sy,
-                          child:                           Container(
-                            child: Text('Input'),
+                          left: 90 * sx,
+                          top: 180 * sy,
+                          width: 100 * sx,
+                          height: 40 * sy,
+                          child:                           Text(
+                            'Text',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF000000),
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FontStyle.normal,
+                            ),
                           ),
                         );
                       },
                     ),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final double sx = constraints.maxWidth / 360.0;
-                        final double sy = constraints.maxHeight / 720.0;
-                        return Positioned(
-                          left: 0 * sx,
-                          top: 210 * sy,
-                          width: 270 * sx,
-                          height: 180 * sy,
-                          child:                           Container(
-                            child: Text('ImageCarousel'),
+                    Positioned(
+                      left: constraints.maxWidth * 0.3704,
+                      top: constraints.maxHeight * 0.2083,
+                      width: constraints.maxWidth * 0.3704,
+                      height: constraints.maxHeight * 0.0694,
+                      child:                       ElevatedButton(
+                        onPressed: () {
+                          // Add button action here
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF8A97AD),
+                          foregroundColor: Color(0xFFFFFFFF),
+                          side: BorderSide(
+                            color: Colors.black,
+                            width: 0,
                           ),
-                        );
-                      },
-                    ),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final double sx = constraints.maxWidth / 360.0;
-                        final double sy = constraints.maxHeight / 720.0;
-                        return Positioned(
-                          left: 0 * sx,
-                          top: 620 * sy,
-                          width: 270 * sx,
-                          height: 50 * sy,
-                          child:                           Container(
-                            child: Text('TabBar'),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        );
-                      },
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        child: Text(
+                          'Button',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
                     )
               ],
             );

@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: ''
+      firebase_token:
+        description: 'Firebase authentication token from frontend'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   deploy-testflight:
@@ -141,34 +146,42 @@ jobs:
         # Add Firebase service token and correct Firebase base URL to project data
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq -c . 2>/dev/null || echo "$PROJECT_DATA")
         
-        # Add Firebase authentication token (prioritize user token from frontend)
-        echo "🔍 DEBUG: Checking for user token in project data..."
-        echo "🔍 DEBUG: Full project data keys: $(echo "$PROJECT_DATA" | jq -r 'keys[]' 2>/dev/null || echo 'JSON parse failed')"
-        echo "🔍 DEBUG: userFirebaseToken field exists: $(echo "$PROJECT_DATA" | jq -r 'has("userFirebaseToken")' 2>/dev/null || echo 'false')"
+        # Add Firebase authentication token (prioritize separate input over embedded token)
+        FIREBASE_TOKEN_INPUT='${{ github.event.inputs.firebase_token }}'
+        USER_TOKEN_FROM_DATA=$(echo "$PROJECT_DATA" | jq -r '.userFirebaseToken // empty')
         
-        USER_TOKEN=$(echo "$PROJECT_DATA" | jq -r '.userFirebaseToken // empty')
-        echo "🔍 DEBUG: Extracted USER_TOKEN: ${USER_TOKEN:-EMPTY}"
-        echo "🔍 DEBUG: USER_TOKEN length: ${#USER_TOKEN}"
+        echo "🔍 DEBUG: Checking for Firebase tokens..."
+        echo "🔍 DEBUG: Firebase token from separate input: ${FIREBASE_TOKEN_INPUT:0:20}...${FIREBASE_TOKEN_INPUT:+present}" 
+        echo "🔍 DEBUG: Firebase token from project data: ${USER_TOKEN_FROM_DATA:0:20}...${USER_TOKEN_FROM_DATA:+present}"
+        echo "🔍 DEBUG: Service token available: ${FIREBASE_SERVICE_TOKEN:+present}"
         
-        if [ -n "$USER_TOKEN" ] && [ "$USER_TOKEN" != "null" ] && [ "$USER_TOKEN" != "empty" ]; then
-          echo "🔑 Using user Firebase token from frontend for backend authentication"
-          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$USER_TOKEN" '. + {firebaseToken: $token}')
-          # Remove the userFirebaseToken field to avoid duplication
-          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq 'del(.userFirebaseToken)')
+        # Prioritize separate input token, then embedded token, then service token
+        if [ -n "$FIREBASE_TOKEN_INPUT" ] && [ "$FIREBASE_TOKEN_INPUT" != "" ]; then
+          echo "🔑 Using Firebase token from separate workflow input"
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$FIREBASE_TOKEN_INPUT" '. + {firebaseToken: $token}')
+        elif [ -n "$USER_TOKEN_FROM_DATA" ] && [ "$USER_TOKEN_FROM_DATA" != "null" ] && [ "$USER_TOKEN_FROM_DATA" != "empty" ]; then
+          echo "🔑 Using Firebase token from project data"
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$USER_TOKEN_FROM_DATA" '. + {firebaseToken: $token}')
         elif [ -n "$FIREBASE_SERVICE_TOKEN" ]; then
           echo "🔑 Using service token as fallback for backend authentication"
           PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg token "$FIREBASE_SERVICE_TOKEN" '. + {firebaseToken: $token}')
         else
           echo "⚠️  Warning: No authentication token provided - backend may not be able to fetch project data"
-          echo "   - User token from frontend: ${USER_TOKEN:-MISSING}"
-          echo "   - Service token from secrets: ${FIREBASE_SERVICE_TOKEN:-MISSING}"
+          echo "   - Separate input token: ${FIREBASE_TOKEN_INPUT:-MISSING}"
+          echo "   - Project data token: ${USER_TOKEN_FROM_DATA:-MISSING}"
+          echo "   - Service token: ${FIREBASE_SERVICE_TOKEN:-MISSING}"
         fi
+        
+        # Clean up embedded token to avoid duplication
+        PROJECT_DATA=$(echo "$PROJECT_DATA" | jq 'del(.userFirebaseToken)')
         
         # Set correct Firebase API base URL (different from backend URL)
         FIREBASE_API_URL="${FIREBASE_API_BASE_URL:-http://10.80.7.189:3200}"
         echo "🌐 Using Firebase API URL: $FIREBASE_API_URL"
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --arg fb "$FIREBASE_API_URL" '. + {firebaseBaseUrl: $fb}')
-        echo "📋 Project data being sent:"
+        echo "📋 Final project data being sent:"
+        echo "🔍 DEBUG: Final project data keys: $(echo "$PROJECT_DATA" | jq -r 'keys[]' 2>/dev/null || echo 'JSON parse failed')"
+        echo "🔍 DEBUG: firebaseToken present in final data: $(echo "$PROJECT_DATA" | jq -r 'has("firebaseToken")' 2>/dev/null || echo 'false')"
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         curl -X POST "$BACKEND_URL/api/package-flutter" \
           -H "Content-Type: application/json" \
