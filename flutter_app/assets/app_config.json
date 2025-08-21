@@ -7,79 +7,6 @@
       "originalName": "H",
       "components": [
         {
-          "id": "component_1755702814071",
-          "name": "Heading",
-          "size": {
-            "width": 150,
-            "height": 50
-          },
-          "type": "Heading",
-          "layer": 1,
-          "props": {
-            "text": "Heading",
-            "color": "#1f2937",
-            "level": "h6",
-            "fontStyle": "normal",
-            "fontFamily": "inherit",
-            "fontWeight": "bold",
-            "lineHeight": "normal",
-            "letterSpacing": "normal",
-            "textTransform": "none",
-            "textDecoration": "none"
-          },
-          "metadata": {
-            "createdAt": "2025-08-20T15:15:06.229Z",
-            "updatedAt": "2025-08-20T16:42:26.186Z"
-          },
-          "position": {
-            "x": 70,
-            "y": 260
-          }
-        },
-        {
-          "id": "component_1755702848096",
-          "name": "App Header",
-          "size": {
-            "width": 270,
-            "height": 64
-          },
-          "type": "AppHeader",
-          "layer": 2,
-          "props": {
-            "showAppIcon": false,
-            "backgroundColor": "#c78f8f"
-          },
-          "metadata": {
-            "createdAt": "2025-08-20T16:42:19.065Z",
-            "updatedAt": "2025-08-20T16:42:26.186Z"
-          },
-          "position": {
-            "x": 0,
-            "y": 10
-          }
-        },
-        {
-          "id": "component_1755702853298",
-          "name": "Text",
-          "size": {
-            "width": 100,
-            "height": 40
-          },
-          "type": "Text",
-          "layer": 3,
-          "props": {
-            "text": "Text"
-          },
-          "metadata": {
-            "createdAt": "2025-08-20T15:15:11.655Z",
-            "updatedAt": "2025-08-20T16:42:26.186Z"
-          },
-          "position": {
-            "x": 90,
-            "y": 180
-          }
-        },
-        {
           "id": "component_1755708143836",
           "name": "Button",
           "size": {
@@ -92,18 +19,94 @@
             "text": "Button",
             "backgroundColor": "#8a97ad"
           },
+          "metadata": {
+            "createdAt": "2025-08-20T21:39:14.692Z",
+            "updatedAt": "2025-08-20T21:39:14.692Z"
+          },
+          "position": {
+            "x": 80,
+            "y": 370
+          }
+        },
+        {
+          "id": "component_1755722654936",
+          "name": "Heading",
+          "size": {
+            "width": 150,
+            "height": 50
+          },
+          "type": "Heading",
+          "layer": 5,
+          "props": {
+            "text": "Heading",
+            "color": "#1f2937",
+            "level": "h3",
+            "fontStyle": "normal",
+            "fontFamily": "inherit",
+            "fontWeight": "bold",
+            "lineHeight": "normal",
+            "letterSpacing": "normal",
+            "textTransform": "none",
+            "textDecoration": "none"
+          },
+          "metadata": {
+            "createdAt": "2025-08-20T21:39:14.692Z",
+            "updatedAt": "2025-08-20T21:39:14.692Z"
+          },
           "position": {
             "x": 100,
-            "y": 120
+            "y": 150
+          }
+        },
+        {
+          "id": "component_1755722658950",
+          "name": "Text",
+          "size": {
+            "width": 100,
+            "height": 40
           },
+          "type": "Text",
+          "layer": 6,
+          "props": {
+            "text": "Text"
+          },
+          "metadata": {
+            "createdAt": "2025-08-20T21:39:14.692Z",
+            "updatedAt": "2025-08-20T21:39:14.692Z"
+          },
+          "position": {
+            "x": 90,
+            "y": 210
+          }
+        },
+        {
+          "id": "component_1755723172750",
+          "name": "App Header",
+          "size": {
+            "width": 270,
+            "height": 64
+          },
+          "type": "AppHeader",
+          "layer": 7,
+          "props": {
+            "showAppIcon": false,
+            "backgroundColor": "#bd9e9e"
+          },
+          "position": {
+            "x": 0,
+            "y": 10
+          },
+          "createdAt": "2025-08-20T21:39:06.983Z",
+          "updatedAt": "2025-08-20T21:39:06.983Z",
           "properties": {
-            "backgroundColor": "#8a97ad"
+            "showAppIcon": false,
+            "backgroundColor": "#bd9e9e"
           },
           "responsive": {
-            "xPercent": 0.3704,
-            "yPercent": 0.2083,
-            "widthPercent": 0.3704,
-            "heightPercent": 0.0694
+            "xPercent": 0,
+            "yPercent": 0.0174,
+            "widthPercent": 1,
+            "heightPercent": 0.1111
           }
         }
       ],
@@ -112,19 +115,19 @@
       },
       "metadata": {
         "source": "DropCanvas cache",
-        "instanceId": "i5lx25dek",
-        "lastUpdated": "2025-08-20T16:42:32.476Z",
+        "instanceId": "lvuc8ugmt",
+        "lastUpdated": "2025-08-20T21:39:16.681Z",
         "totalComponents": 4,
         "createdAt": "1970-01-21T07:41:42.808Z",
-        "updatedAt": "1970-01-21T07:41:48.152Z",
+        "updatedAt": "1970-01-21T07:42:05.956Z",
         "pageId": "64ac8af6-d8b0-477d-b851-55b267f43ee6"
       }
     }
   ],
   "projectId": "bcfe19f8-9950-4e32-97c1-6d779d695d3d",
   "templateId": "newProject",
-  "buildTime": "2025-08-20T20:16:29.374Z",
+  "buildTime": "2025-08-21T14:29:20.143Z",
   "appIcon": null,
   "version": "1.0.1",
-  "buildNumber": "1755720737"
+  "buildNumber": "1755786559"
 }

@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'AI Project - bcfe19f8-9950-4e32-97c1-6d779d695d3d',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFC78F8F)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFBD9E9E)),
         // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
         scaffoldBackgroundColor: (("${backgroundColor}" == "${appHeaderBgColor}") ? Colors.white : Color(0xFFFFFFFF)),
       ),
@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Color(0xFFC78F8F),
+        backgroundColor: Color(0xFFBD9E9E),
         foregroundColor: Color(0xFFFFFFFF),
         elevation: 1,
         centerTitle: false,
@@ -54,14 +54,50 @@ class HomeScreen extends StatelessWidget {
                         final double sx = constraints.maxWidth / 360.0;
                         final double sy = constraints.maxHeight / 720.0;
                         return Positioned(
-                          left: 70 * sx,
-                          top: 260 * sy,
+                          left: 80 * sx,
+                          top: 370 * sy,
+                          width: 100 * sx,
+                          height: 40 * sy,
+                          child:                           ElevatedButton(
+                            onPressed: () {
+                              // Add button action here
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF8A97AD),
+                              foregroundColor: Color(0xFFFFFFFF),
+                              side: BorderSide(
+                                color: Colors.black,
+                                width: 0,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            child: Text(
+                              'Button',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double sx = constraints.maxWidth / 360.0;
+                        final double sy = constraints.maxHeight / 720.0;
+                        return Positioned(
+                          left: 100 * sx,
+                          top: 150 * sy,
                           width: 150 * sx,
                           height: 50 * sy,
                           child:                           Text(
                             'Heading',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 24,
                               color: Color(0xFF1F2937),
                               fontWeight: FontWeight.bold,
                             ),
@@ -75,7 +111,7 @@ class HomeScreen extends StatelessWidget {
                         final double sy = constraints.maxHeight / 720.0;
                         return Positioned(
                           left: 90 * sx,
-                          top: 180 * sy,
+                          top: 210 * sy,
                           width: 100 * sx,
                           height: 40 * sy,
                           child:                           Text(
@@ -90,36 +126,6 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       },
-                    ),
-                    Positioned(
-                      left: constraints.maxWidth * 0.3704,
-                      top: constraints.maxHeight * 0.2083,
-                      width: constraints.maxWidth * 0.3704,
-                      height: constraints.maxHeight * 0.0694,
-                      child:                       ElevatedButton(
-                        onPressed: () {
-                          // Add button action here
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF8A97AD),
-                          foregroundColor: Color(0xFFFFFFFF),
-                          side: BorderSide(
-                            color: Colors.black,
-                            width: 0,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        child: Text(
-                          'Button',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
                     )
               ],
             );

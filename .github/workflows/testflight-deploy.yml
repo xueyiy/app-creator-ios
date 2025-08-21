@@ -33,11 +33,11 @@ on:
         required: false
         type: string
         default: ''
-              firebase_token:
-          description: 'Firebase authentication token from frontend'
-          required: false
-          type: string
-          default: ''
+      firebase_token:
+        description: 'Firebase authentication token from frontend'
+        required: false
+        type: string
+        default: ''
         preloaded_data:
           description: 'Preloaded Firebase data as JSON string to bypass private IP'
           required: false
