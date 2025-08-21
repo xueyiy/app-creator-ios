@@ -39,10 +39,10 @@ on:
         type: string
         default: ''
       preloaded_data:
-          description: 'Preloaded Firebase data as JSON string to bypass private IP'
-          required: false
-          type: string
-          default: ''
+        description: 'Preloaded Firebase data as JSON string to bypass private IP'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   deploy-testflight:
