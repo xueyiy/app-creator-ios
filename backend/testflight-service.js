@@ -982,16 +982,29 @@ class HomeScreen extends StatelessWidget {
 
   generateMainDartFromComponents(appConfig, screenData) {
     console.log('🚨 DEBUG: generateMainDartFromComponents called!');
-    console.log('🚨 DEBUG: appConfig:', JSON.stringify(appConfig, null, 2));
-    console.log('🚨 DEBUG: screenData:', JSON.stringify(screenData, null, 2));
+    console.log('🚨 DEBUG: appConfig.appName:', appConfig.appName);
+    console.log('🚨 DEBUG: screenData.screenName:', screenData.screenName);
+    console.log('🚨 DEBUG: screenData.components.length:', screenData.components?.length);
+    
+    console.log('🚨🚨🚨 FUNCTION ENTRY: generateMainDartFromComponents executing!');
+    console.log('🚨🚨🚨 LINE BY LINE DEBUG: Starting execution...');
     
     const components = screenData.components || [];
+    console.log('🚨🚨🚨 DEBUG 1: components extracted, length:', components.length);
+    
     const screenProperties = screenData.screenProperties || {};
+    console.log('🚨🚨🚨 DEBUG 2: screenProperties extracted');
+    
     const screenName = screenData.screenName || 'home';
+    console.log('🚨🚨🚨 DEBUG 3: screenName:', screenName);
+    
     const backgroundColor = screenProperties.backgroundColor || '#ffffff';
+    console.log('🚨🚨🚨 DEBUG 4: backgroundColor:', backgroundColor);
     
     // Determine layout strategy
+    console.log('🚨🚨🚨 DEBUG 5: About to call shouldUseAbsoluteLayout...');
     const useAbsoluteLayout = this.shouldUseAbsoluteLayout(components);
+    console.log('🚨🚨🚨 DEBUG 6: useAbsoluteLayout:', useAbsoluteLayout);
     
     // Find AppHeader (used in either strategy)
     const appHeaderComponent = components.find(c => {
@@ -1018,8 +1031,24 @@ class HomeScreen extends StatelessWidget {
     console.log(`🎨 Generating Flutter code for ${positionedComponents.length} positioned components on screen: ${screenName} (absoluteLayout=${useAbsoluteLayout})`);
     console.log(`📋 Component types in positioned components: ${positionedComponents.map(c => c.type).join(', ')}`);
     console.log(`📋 AppHeader component found: ${!!appHeaderComponent}, will render in Scaffold AppBar: ${!!appHeaderComponent}`);
+    
+    // CRITICAL DEBUG: Check if this point is reached
+    console.log(`🚨🚨🚨 WIDGET GENERATION DEBUG: Starting widget generation process!`);
+    console.log(`🚨🚨🚨 DEBUG: positionedComponents array:`, JSON.stringify(positionedComponents, null, 2));
+    
+    // Generate the positioned components widgets BEFORE the template string
+    console.log(`🔧 BEFORE: About to generate widgets for ${positionedComponents.length} components`);
+    const generatedWidgets = positionedComponents.map(component => {
+      console.log(`🔧 MAPPING: Processing component ${component.id} (${component.type})`);
+      const widget = this.generateComponentWidget(component, '                    ');
+      console.log(`🔧 MAPPED: Component ${component.id} resulted in widget:`, widget ? 'SUCCESS' : 'NULL/EMPTY');
+      return widget;
+    }).filter(Boolean);
+    console.log(`🔧 AFTER: Generated widgets count: ${generatedWidgets.length}`);
+    console.log(`🔧 Generated widgets sample:`, generatedWidgets.slice(0, 2).map(w => w.substring(0, 100) + '...'));
 
-    return `import 'package:flutter/material.dart';
+    // Generate the main.dart template string
+    const flutterCode = `import 'package:flutter/material.dart';
 
 void main() {
   runApp(MyApp());
@@ -1034,7 +1063,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: ${this.parseColorToFlutter(appHeaderBgColor)}),
         // Heuristic: if screen background equals header color, prefer white to avoid full-screen header look
-        scaffoldBackgroundColor: ${(appHeaderComponent ? `((${JSON.stringify('${backgroundColor}')} == ${JSON.stringify('${appHeaderBgColor}')}) ? Colors.white : ${this.parseColorToFlutter(backgroundColor)})` : this.parseColorToFlutter(backgroundColor))},
+        scaffoldBackgroundColor: ${this.parseColorToFlutter(backgroundColor)},
       ),
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -1080,7 +1109,7 @@ class HomeScreen extends StatelessWidget {
               fit: StackFit.expand,
               clipBehavior: Clip.none,
               children: [
-${positionedComponents.map(component => this.generateComponentWidget(component, '                    ')).filter(Boolean).join(',\n')}
+${generatedWidgets.join(',\n')}
               ],
             );
           },
@@ -1090,6 +1119,9 @@ ${positionedComponents.map(component => this.generateComponentWidget(component, 
   }
 }
 `;
+
+    console.log(`🔧 FINAL: Flutter code generated, length: ${flutterCode.length} characters`);
+    return flutterCode;
   }
 
   // Decide if absolute layout should be used based on responsive percentages or explicit positions
@@ -1113,6 +1145,7 @@ ${positionedComponents.map(component => this.generateComponentWidget(component, 
     const size = component.size || { width: 100, height: 30 };
     const props = component.props || {};
 
+    console.log(`🔧 DEBUG: generateComponentWidget called for type: ${type}, id: ${component.id}`);
     let widgetCode = '';
 
     switch (type) {
@@ -1170,13 +1203,15 @@ ${indent})`;
         ? `constraints.maxHeight * ${responsive.heightPercent}`
         : `${size.height || 30}.0`;
 
-      return `${indent}Positioned(
+      const responsiveWidget = `${indent}Positioned(
 ${indent}  left: ${leftExpr},
 ${indent}  top: ${topExpr},
 ${indent}  width: ${widthExpr},
 ${indent}  height: ${heightExpr},
 ${indent}  child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), indent + '  ')},
 ${indent})`;
+      console.log(`🔧 DEBUG: Generated responsive widget for ${type}, length: ${responsiveWidget.length}`);
+      return responsiveWidget;
     }
 
     // Legacy pixel-based positioning: scale from a 360x720 design space
@@ -1184,7 +1219,7 @@ ${indent})`;
     const pxTop = (position.y || 0);
     const pxWidth = (size.width || 100);
     const pxHeight = (size.height || 30);
-    return `${indent}LayoutBuilder(
+    const pixelWidget = `${indent}LayoutBuilder(
 ${indent}  builder: (context, constraints) {
 ${indent}    final double sx = constraints.maxWidth / 360.0;
 ${indent}    final double sy = constraints.maxHeight / 720.0;
@@ -1197,6 +1232,8 @@ ${indent}      child: ${widgetCode.replace(new RegExp(`^${indent}`, 'gm'), inden
 ${indent}    );
 ${indent}  },
 ${indent})`;
+    console.log(`🔧 DEBUG: Generated pixel widget for ${type}, length: ${pixelWidget.length}`);
+    return pixelWidget;
   }
 
   generateTextWidget(props, indent) {
