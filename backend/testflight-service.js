@@ -678,6 +678,14 @@ flutter:
           if (screenData.jsonData && screenData.jsonData.components) {
             console.log(`✅ Processing preloaded screen: ${screenData.filename}`);
             console.log(`📊 Components found: ${screenData.jsonData.components.length}`);
+            console.log(`🔍 DEBUG: Component details:`, JSON.stringify(screenData.jsonData.components.map(c => ({
+              id: c.id,
+              name: c.name,
+              type: c.type,
+              hasPosition: !!c.position,
+              hasResponsive: !!c.responsive,
+              hasProps: !!c.props
+            })), null, 2));
             
             // Convert to screen format expected by the app generator
             const screen = {
@@ -696,13 +704,30 @@ flutter:
             
             screens.push(screen);
             console.log(`🎯 Preloaded screen data prepared for app generation`);
+            console.log(`🔍 DEBUG: Final screen object:`, JSON.stringify({
+              screenName: screen.screenName,
+              componentsCount: screen.components.length,
+              hasScreenProperties: !!screen.screenProperties,
+              componentTypes: screen.components.map(c => c.type)
+            }, null, 2));
           } else {
             console.log(`⚠️ Preloaded screen missing components: ${screenData.filename}`);
+            console.log(`🔍 DEBUG: screenData structure:`, JSON.stringify({
+              hasJsonData: !!screenData.jsonData,
+              jsonDataKeys: screenData.jsonData ? Object.keys(screenData.jsonData) : [],
+              hasComponents: !!(screenData.jsonData && screenData.jsonData.components),
+              componentsLength: screenData.jsonData && screenData.jsonData.components ? screenData.jsonData.components.length : 0
+            }, null, 2));
           }
         }
         
         if (screens.length > 0) {
           console.log(`✅ Successfully used preloaded data: ${screens.length} screens`);
+          console.log(`🔍 DEBUG: All screens summary:`, JSON.stringify(screens.map(s => ({
+            name: s.screenName,
+            components: s.components.length,
+            types: s.components.map(c => c.type)
+          })), null, 2));
           return screens;
         }
       }
