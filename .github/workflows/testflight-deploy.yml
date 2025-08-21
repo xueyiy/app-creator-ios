@@ -203,6 +203,9 @@ jobs:
         echo "🔍 DEBUG: preloadedFirebaseData present: $(echo "$PROJECT_DATA" | jq -r 'has("preloadedFirebaseData")' 2>/dev/null || echo 'false')"
         if [ "$(echo "$PROJECT_DATA" | jq -r 'has("preloadedFirebaseData")' 2>/dev/null)" = "true" ]; then
           echo "🔍 DEBUG: preloaded screens count: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData | length' 2>/dev/null || echo '0')"
+          echo "🔍 DEBUG: first screen filename: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData[0].filename' 2>/dev/null || echo 'N/A')"
+          echo "🔍 DEBUG: first screen components count: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData[0].jsonData.components | length' 2>/dev/null || echo '0')"
+          echo "🔍 DEBUG: first 2 component types: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData[0].jsonData.components[0:2] | map(.type) | join(", ")' 2>/dev/null || echo 'N/A')"
         fi
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
         
