@@ -652,14 +652,24 @@ flutter:
 
   // Generate main.dart for Flutter
   generateMainDart(appConfig) {
+    console.log('🚨 CRITICAL DEBUG: generateMainDart called!');
+    console.log('🚨 CRITICAL DEBUG: appConfig keys:', Object.keys(appConfig));
+    console.log('🚨 CRITICAL DEBUG: appConfig.screens exists?', !!appConfig.screens);
+    console.log('🚨 CRITICAL DEBUG: appConfig.screens length:', appConfig.screens ? appConfig.screens.length : 'N/A');
+    
     // Use the same JSON-to-Flutter logic as the frontend
     const screenData = appConfig.screens && appConfig.screens.length > 0 ? appConfig.screens[0] : null;
     
+    console.log('🚨 CRITICAL DEBUG: screenData exists?', !!screenData);
+    console.log('🚨 CRITICAL DEBUG: screenData components?', screenData ? screenData.components?.length : 'N/A');
+    
     if (!screenData || !screenData.components || screenData.components.length === 0) {
       // Fallback to simple welcome screen if no screens provided
+      console.log('🚨 CRITICAL DEBUG: Using fallback - no screen data available');
       return this.generateFallbackMainDart(appConfig);
     }
 
+    console.log('🚨 CRITICAL DEBUG: Using components - proceeding with component generation');
     // Generate Flutter app using the same component rendering logic as frontend
     return this.generateMainDartFromComponents(appConfig, screenData);
   }

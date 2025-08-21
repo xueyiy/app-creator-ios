@@ -205,10 +205,36 @@ jobs:
           echo "🔍 DEBUG: preloaded screens count: $(echo "$PROJECT_DATA" | jq -r '.preloadedFirebaseData.screensData | length' 2>/dev/null || echo '0')"
         fi
         echo "$PROJECT_DATA" | jq '.' 2>/dev/null || echo "$PROJECT_DATA"
-        curl -X POST "$BACKEND_URL/api/package-flutter" \
+        
+        echo "📡 Calling backend API to generate Flutter app..."
+        echo "🔍 Backend URL: $BACKEND_URL/api/package-flutter"
+        
+        # Use curl with verbose output to capture backend logs
+        HTTP_RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST "$BACKEND_URL/api/package-flutter" \
           -H "Content-Type: application/json" \
           -d "$PROJECT_DATA" \
-          --output app_package.zip
+          --output app_package.zip)
+        
+        HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+        
+        echo "📊 Backend API Response Status: $HTTP_STATUS"
+        
+        if [ "$HTTP_STATUS" -eq 200 ]; then
+          echo "✅ Backend API call successful"
+        else
+          echo "❌ Backend API call failed with status: $HTTP_STATUS"
+          echo "🔍 Response: $HTTP_RESPONSE"
+          exit 1
+        fi
+        
+        # Check if zip file was created
+        if [ -f app_package.zip ]; then
+          echo "📦 Flutter app package created successfully"
+          echo "📊 Package size: $(ls -lh app_package.zip | awk '{print $5}')"
+        else
+          echo "❌ Flutter app package not created"
+          exit 1
+        fi
           
         # Extract the generated app
         echo "📦 Extracting generated Flutter app..."
