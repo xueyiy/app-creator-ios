@@ -33,11 +33,16 @@ on:
         required: false
         type: string
         default: ''
-      firebase_token:
-        description: 'Firebase authentication token from frontend'
-        required: false
-        type: string
-        default: ''
+              firebase_token:
+          description: 'Firebase authentication token from frontend'
+          required: false
+          type: string
+          default: ''
+        preloaded_data:
+          description: 'Preloaded Firebase data as JSON string to bypass private IP'
+          required: false
+          type: string
+          default: ''
 
 jobs:
   deploy-testflight:
@@ -149,11 +154,13 @@ jobs:
         # Add Firebase authentication token (prioritize separate input over embedded token)
         FIREBASE_TOKEN_INPUT='${{ github.event.inputs.firebase_token }}'
         USER_TOKEN_FROM_DATA=$(echo "$PROJECT_DATA" | jq -r '.userFirebaseToken // empty')
+        PRELOADED_DATA_INPUT='${{ github.event.inputs.preloaded_data }}'
         
         echo "🔍 DEBUG: Checking for Firebase tokens..."
         echo "🔍 DEBUG: Firebase token from separate input: ${FIREBASE_TOKEN_INPUT:0:20}...${FIREBASE_TOKEN_INPUT:+present}" 
         echo "🔍 DEBUG: Firebase token from project data: ${USER_TOKEN_FROM_DATA:0:20}...${USER_TOKEN_FROM_DATA:+present}"
         echo "🔍 DEBUG: Service token available: ${FIREBASE_SERVICE_TOKEN:+present}"
+        echo "🔍 DEBUG: Preloaded data input length: ${#PRELOADED_DATA_INPUT}"
         
         # Prioritize separate input token, then embedded token, then service token
         if [ -n "$FIREBASE_TOKEN_INPUT" ] && [ "$FIREBASE_TOKEN_INPUT" != "" ]; then
@@ -174,6 +181,17 @@ jobs:
         
         # Clean up embedded token to avoid duplication
         PROJECT_DATA=$(echo "$PROJECT_DATA" | jq 'del(.userFirebaseToken)')
+        
+        # Add preloaded data if available (bypass private IP issue)
+        if [ -n "$PRELOADED_DATA_INPUT" ] && [ "$PRELOADED_DATA_INPUT" != "" ]; then
+          echo "🎯 Adding preloaded Firebase data to bypass private IP issue"
+          echo "🔍 DEBUG: Preloaded data size: ${#PRELOADED_DATA_INPUT} characters"
+          # Parse and add preloaded data to project data
+          PROJECT_DATA=$(echo "$PROJECT_DATA" | jq --argjson preloaded "$PRELOADED_DATA_INPUT" '. + {preloadedFirebaseData: $preloaded}')
+          echo "✅ Preloaded data successfully added to project data"
+        else
+          echo "⚠️ No preloaded data provided - will use API fetching"
+        fi
         
         # Set correct Firebase API base URL (different from backend URL)
         FIREBASE_API_URL="${FIREBASE_API_BASE_URL:-http://10.80.7.189:3200}"
